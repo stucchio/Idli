@@ -8,7 +8,9 @@ import argparse
 
 
 if __name__ == "__main__":
-    cmds.main_parser.parse_args()
-    #print args.command
+    import bugger.github as gh
+    backend = gh.GithubBackend("stucchio", "Test-repo")
+    cmds.run_command(backend)
+
 
 
