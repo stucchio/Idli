@@ -18,14 +18,15 @@ def catch_url_error(func):
 
 
 class GithubBackend(bugger.Backend):
-    def __init__(self, user, repo):
-        self.__user = user
-        self.__repo = repo
+    def __init__(self, repostring, auth):
+        self.repo_owner, self.repo_name = repostring.split("/")
+        self.user = auth[0]
+        self.pwd = auth[1]
         self.__validate()
 
     @catch_url_error
     def issue_list(self, state=True):
-        url = github_base_api_url + "issues/list/" + self.__user + "/" + self.__repo + "/" + self.__state_to_gh_state(state)
+        url = github_base_api_url + "issues/list/" + self.repo_owner + "/" + self.repo_name + "/" + self.__state_to_gh_state(state)
         json_result = urllib2.urlopen(url).read()
         issue_as_json = json.loads(json_result)
         result = []
@@ -36,8 +37,8 @@ class GithubBackend(bugger.Backend):
 
     @catch_url_error
     def get_issue(self, issue_id):
-        issue_url = github_base_api_url + "issues/show/" + self.__user + "/" + self.__repo + "/" + issue_id
-        comment_url = github_base_api_url + "issues/comments/" + self.__user + "/" + self.__repo + "/" + issue_id
+        issue_url = github_base_api_url + "issues/show/" + self.repo_owner + "/" + self.repo_name + "/" + issue_id
+        comment_url = github_base_api_url + "issues/comments/" + self.repo_owner + "/" + self.repo_name + "/" + issue_id
         try:
             issue_as_json = json.loads(urllib2.urlopen(issue_url).read())
             comments_as_json = json.loads(urllib2.urlopen(comment_url).read())
@@ -61,21 +62,21 @@ class GithubBackend(bugger.Backend):
 
     @catch_url_error
     def __validate_user(self):
-        test_url =github_base_api_url + "user/show/" + self.__user
+        test_url =github_base_api_url + "user/show/" + self.repo_owner
         try:
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["user"]
         except urllib2.HTTPError, e:
-            raise bugger.BuggerException("Can not find user " + self.__user + " on github.")
+            raise bugger.BuggerException("Can not find user " + self.repo_owner + " on github.")
 
     @catch_url_error
     def __validate_repo(self):
-        test_url =github_base_api_url + "repos/show/" + self.__user + "/" + self.__repo
+        test_url =github_base_api_url + "repos/show/" + self.repo_owner + "/" + self.repo_name
         try:
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["repository"]
         except urllib2.HTTPError, e:
-            raise bugger.BuggerException("Can not find repository " + self.__repo + " on github.")
+            raise bugger.BuggerException("Can not find repository " + self.repo_name + " on github.")
 
     #Utilities
     def __state_to_gh_state(self, state):
