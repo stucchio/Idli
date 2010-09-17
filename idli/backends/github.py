@@ -5,7 +5,7 @@ import urllib2
 import json
 import datetime
 
-import bugger
+import idli
 github_base_api_url = "http://github.com/api/v2/json/"
 dateformat = "%Y/%m/%d %H:%M:%S"
 
@@ -14,10 +14,10 @@ def catch_url_error(func):
         try:
             return func(*args, **kwargs)
         except urllib2.URLError, e:
-            raise bugger.BuggerException("Could not connect to github. Error: " + str(e))
+            raise idli.IdliException("Could not connect to github. Error: " + str(e))
     return wrapped_func
 
-class GithubBackend(bugger.Backend):
+class GithubBackend(idli.Backend):
     def __init__(self, repostring, auth):
         self.repo_owner, self.repo_name = repostring.split("/")
         self.user = auth[0]
@@ -51,7 +51,7 @@ class GithubBackend(bugger.Backend):
             issue_as_json = json.loads(urllib2.urlopen(issue_url).read())
             comments_as_json = json.loads(urllib2.urlopen(comment_url).read())
         except urllib2.HTTPError, e:
-            raise bugger.BuggerException("Could not find issue with id '" + issue_id + "'")
+            raise idli.IdliException("Could not find issue with id '" + issue_id + "'")
 
         js_issue = issue_as_json["issue"]
         date = self.__parse_date(js_issue["created_at"])
@@ -59,7 +59,7 @@ class GithubBackend(bugger.Backend):
         comments_list = comments_as_json["comments"]
         comment_result = []
         for c in comments_list:
-            comment_result.append(bugger.IssueComment(issue, c["user"], "", c["body"], self.__parse_date(c["created_at"])))
+            comment_result.append(idli.IssueComment(issue, c["user"], "", c["body"], self.__parse_date(c["created_at"])))
         return (issue, comment_result)
 
     #Github queries
@@ -74,7 +74,7 @@ class GithubBackend(bugger.Backend):
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["user"]
         except urllib2.HTTPError, e:
-            raise bugger.BuggerException("Can not find user " + self.repo_owner + " on github.")
+            raise idli.IdliException("Can not find user " + self.repo_owner + " on github.")
 
     @catch_url_error
     def __validate_repo(self):
@@ -83,12 +83,12 @@ class GithubBackend(bugger.Backend):
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["repository"]
         except urllib2.HTTPError, e:
-            raise bugger.BuggerException("Can not find repository " + self.repo_name + " on github.")
+            raise idli.IdliException("Can not find repository " + self.repo_name + " on github.")
 
     #Utilities
     def __parse_issue(self, issue_dict):
         date = self.__parse_date(issue_dict["created_at"])
-        return bugger.Issue(issue_dict["title"], issue_dict["body"],
+        return idli.Issue(issue_dict["title"], issue_dict["body"],
                             issue_dict["number"], issue_dict["user"],
                             num_comments = issue_dict["comments"], status = issue_dict["state"],
                             date=date)

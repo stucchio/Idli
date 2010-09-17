@@ -1,5 +1,5 @@
-import bugger
-import bugger.github as gh
+import idli
+import idli.github as gh
 import argparse
 
 backend_list = { "github" : gh.GithubBackend,
@@ -115,5 +115,5 @@ def run_command(backend):
     command_runner = command(backend, parsed)
     try:
         result = command_runner.run()
-    except bugger.BuggerException, e:
+    except idli.IdliException, e:
         print e.value

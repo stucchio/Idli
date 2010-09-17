@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
-import bugger
-import bugger.commands as cmds
+import idli
+import idli.commands as cmds
 
 import sys
 import argparse
 
 if __name__ == "__main__":
-    import bugger.backends.github as gh
+    import idli.backends.github as gh
     backend = gh.GithubBackend("stucchio/Test-repo", ("stucchio", open("apitoken").read()))
     cmds.run_command(backend)
 
