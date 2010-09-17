@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from urllib2 import urlopen
+import urllib2
 import json
 import datetime
 
@@ -9,7 +9,6 @@ github_base_api_url = "http://github.com/api/v2/json/"
 dateformat = "%Y/%m/%d %H:%M:%S"
 
 class GithubBackend(bugger.Backend):
-
     def __init__(self, user, repo):
         self.__user = user
         self.__repo = repo
@@ -20,7 +19,7 @@ class GithubBackend(bugger.Backend):
             url += "open"
         else:
             url += "closed"
-        json_result = urlopen(url).read()
+        json_result = urllib2.urlopen(url).read()
         issue_as_json = json.loads(json_result)
         result = []
         for i in issue_as_json["issues"]:
@@ -34,12 +33,18 @@ class GithubBackend(bugger.Backend):
     def get_issue(self, issue_id):
         issue_url = github_base_api_url + "issues/show/" + self.__user + "/" + self.__repo + "/" + issue_id
         comment_url = github_base_api_url + "issues/comments/" + self.__user + "/" + self.__repo + "/" + issue_id
-        issue_as_json = json.loads(urlopen(issue_url).read())
+        try:
+            issue_as_json = json.loads(urllib2.urlopen(issue_url).read())
+            comments_as_json = json.loads(urllib2.urlopen(comment_url).read())
+        except urllib2.HTTPError, e:
+            raise bugger.BuggerException("Could not find issue with id '" + issue_id + "'")
+        except urllib2.URLError, e:
+            raise bugger.BuggerException("Could not connect to github. Error: " + str(e))
+
         js_issue = issue_as_json["issue"]
         date = self.__parse_date(js_issue["created_at"])
         issue = bugger.Issue(js_issue["title"], js_issue["body"], js_issue["number"], js_issue["user"], js_issue["state"], js_issue["comments"], date)
 
-        comments_as_json = json.loads(urlopen(comment_url).read())
         comments_list = comments_as_json["comments"]
         comment_result = []
         for c in comments_list:

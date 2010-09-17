@@ -96,4 +96,7 @@ def run_command(backend):
     cmd_arg = parsed.command
     command = commands[cmd_arg]
     command_runner = command(backend, parsed)
-    command_runner.run()
+    try:
+        result = command_runner.run()
+    except bugger.BuggerException, e:
+        print e.value

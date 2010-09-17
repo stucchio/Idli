@@ -42,7 +42,7 @@ class Backend(object):
     def display_issue(self):
         pass
 
-class UserException(Exception):
+class BuggerException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
