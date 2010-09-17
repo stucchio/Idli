@@ -101,8 +101,6 @@ class AddIssue(Command):
         issue = self.backend.add_issue(self.args.title, self.args.body)
         print_issue(issue, [])
 
-
-
 commands = { "list" : ListCommand,
              "show" : ViewIssue,
              "add" : AddIssue,

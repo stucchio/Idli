@@ -17,15 +17,25 @@ def catch_url_error(func):
             raise idli.IdliException("Could not connect to github. Error: " + str(e))
     return wrapped_func
 
+def catch_missing_user_repo_404(func):
+    def wrapped_func(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except urllib2.HTTPError, e:
+            self.validate()
+            raise e
+    return wrapped_func
+
+
+
 class GithubBackend(idli.Backend):
     def __init__(self, repostring, auth):
         self.repo_owner, self.repo_name = repostring.split("/")
         self.user = auth[0]
         self.token = auth[1]
-        self.__validate()
-        self.add_issue("aye carumba", "el vacilon de la manana")
 
     @catch_url_error
+    @catch_missing_user_repo_404
     def add_issue(self, title, body):
         url = github_base_api_url + "issues/open/" + self.repo_owner + "/" + self.repo_name
         data = urllib.urlencode(self.__post_vars(True, title=title, body=body))
@@ -34,6 +44,7 @@ class GithubBackend(idli.Backend):
         return issue
 
     @catch_url_error
+    @catch_missing_user_repo_404
     def issue_list(self, state=True):
         url = github_base_api_url + "issues/list/" + self.repo_owner + "/" + self.repo_name + "/" + self.__state_to_gh_state(state)
         json_result = urllib2.urlopen(url).read()
@@ -51,6 +62,7 @@ class GithubBackend(idli.Backend):
             issue_as_json = json.loads(urllib2.urlopen(issue_url).read())
             comments_as_json = json.loads(urllib2.urlopen(comment_url).read())
         except urllib2.HTTPError, e:
+            self.validate()
             raise idli.IdliException("Could not find issue with id '" + issue_id + "'")
 
         js_issue = issue_as_json["issue"]
@@ -63,13 +75,13 @@ class GithubBackend(idli.Backend):
         return (issue, comment_result)
 
     #Github queries
-    def __validate(self):
+    def validate(self):
         self.__validate_user()
         self.__validate_repo()
 
     @catch_url_error
     def __validate_user(self):
-        test_url =github_base_api_url + "user/show/" + self.repo_owner
+        test_url = github_base_api_url + "user/show/" + self.repo_owner
         try:
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["user"]
@@ -78,7 +90,7 @@ class GithubBackend(idli.Backend):
 
     @catch_url_error
     def __validate_repo(self):
-        test_url =github_base_api_url + "repos/show/" + self.repo_owner + "/" + self.repo_name
+        test_url = github_base_api_url + "repos/show/" + self.repo_owner + "/" + self.repo_name
         try:
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["repository"]
