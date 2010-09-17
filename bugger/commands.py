@@ -18,6 +18,8 @@ class Command(object):
         self.backend = backend
         self.args = args
 
+__date_format = "<%Y/%m/%d %H:%M>"
+
 list_parser = command_parsers.add_parser("list", help="Print a list of issues")
 list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
 list_parser.add_argument('--limit', dest='limit', type=int, default=None, help = "Number of issues to list")
@@ -29,7 +31,7 @@ class ListCommand(Command):
 
     def run(self):
         limit = self.args.limit
-        self.print_issue_list(self.backend, self.__state(), limit)
+        self.print_issue_list(self.__state(), limit)
 
     def __format_issue_line(self, id, date, title, creator, num_comments):
         if date.__class__ == str:
@@ -44,16 +46,49 @@ class ListCommand(Command):
         if (self.args.state == "closed"):
             return False
 
-    def print_issue_list(self, backend, state=True, limit=None):
+    def print_issue_list(self, state=True, limit=None):
         """Print list of issues to stdout."""
-        issues = backend.issue_list(state)
+        issues = self.backend.issue_list(state)
         print self.__format_issue_line("ID", "date", "title", "creator", "# comments")
         if (limit is None):
             limit = len(issues)
         for i in issues[0:limit]:
             print self.__format_issue_line(i.hashcode, i.date, i.title, i.creator, i.num_comments)
 
+view_issue_parser = command_parsers.add_parser("show", help="Display an issue")
+view_issue_parser.add_argument('id', type=str, help='issue ID')
+
+class ViewIssue(Command):
+    name = "List issues"
+    parser = view_issue_parser
+
+    def run(self):
+        self.print_issue()
+
+    def print_issue(self):
+        issue, comments = self.backend.get_issue(self.args.id)
+        print "Title: " + issue.title
+        print "Creator: " + issue.creator
+        print "Date: " + str(issue.date)
+        print "Open: " + str(issue.status)
+        print
+        print issue.body
+        print
+
+        if len(comments) > 0:
+            print "Comments:"
+        for c in comments:
+            print
+            if (c.title != ""):
+                print "    Comment: " + c.title.__class__
+            print "    Author: " + c.creator
+            print "    Date: " + str(c.date)
+            print
+            print "    " + c.body
+
+
 commands = { "list" : ListCommand,
+             "show" : ViewIssue,
              }
 
 def run_command(backend):

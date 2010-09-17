@@ -1,15 +1,26 @@
 #!/usr/bin/python
 
 class Issue(object):
-    def __init__(self, title, description, hashcode, creator, status = True, num_comments = None, date=None):
+    def __init__(self, title, body, hashcode, creator, status = True, num_comments = None, date=None):
         self.title = title
-        self.description = description
+        self.body = body
         self.hashcode = str(hashcode)
         self.creator = creator
         self.num_comments = int(num_comments or 0)
-        self.status = status
+        self.status = self.__parse_status(status)
         self.date = date
 
+    def __parse_status(self, status):
+        if (status.__class__ == bool):
+            return status
+        if (status.__class__ == str or status.__class__ == unicode):
+            return self.__status_mapping[status.lower()]
+
+    __status_mapping = {"open" : True,
+                        "closed" : False,
+                        "true" : True,
+                        "false" : False
+                        }
     def __str__(self):
         return "Issue(" + self.hashcode + ", " + self.title + ", " + self.creator + ", " + str(self.status) + ")"
 
