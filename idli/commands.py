@@ -1,5 +1,7 @@
 import idli
+import idli.util as util
 import idli.backends.github as gh
+
 import argparse
 
 backend_list = { "github" : gh.GithubBackend,
@@ -98,8 +100,20 @@ class AddIssue(Command):
     parser = add_issue_parser
 
     def run(self):
-        issue = self.backend.add_issue(self.args.title, self.args.body)
+        title, body = self.get_title_body()
+        issue = self.backend.add_issue(title, body)
+        print "Comment added!"
+        print
         print_issue(issue, [])
+
+    def get_title_body(self):
+        title = self.args.title or ""
+        body = self.args.body or ""
+        if (title == "" or body == ""):
+            title, body, exit_status = util.get_title_body_from_editor(title, body, prefix='idli-add-issue')
+            if (exit_status != 0):
+                raise idli.IdliException("Operation cancelled.")
+        return title, body
 
 commands = { "list" : ListCommand,
              "show" : ViewIssue,
