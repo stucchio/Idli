@@ -1,5 +1,5 @@
 import idli
-import idli.github as gh
+import idli.backends.github as gh
 import argparse
 
 backend_list = { "github" : gh.GithubBackend,
