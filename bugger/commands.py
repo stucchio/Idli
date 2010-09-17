@@ -5,6 +5,28 @@ import argparse
 backend_list = { "github" : gh.GithubBackend,
                  }
 
+def print_issue(issue, comments):
+    print "ID: " + issue.hashcode
+    print "Title: " + issue.title
+    print "Creator: " + issue.creator
+    print "Date: " + str(issue.date)
+    print "Open: " + str(issue.status)
+    print
+    print issue.body
+    print
+
+    if len(comments) > 0:
+        print "Comments:"
+    for c in comments:
+        print
+        if (c.title != ""):
+            print "    Comment: " + c.title.__class__
+        print "    Author: " + c.creator
+        print "    Date: " + str(c.date)
+        print
+        print "    " + c.body
+
+
 main_parser = argparse.ArgumentParser(description="Command line bug reporting tool")
 main_parser.add_argument('--user', dest='user', default=None, help='Username')
 main_parser.add_argument('--db', dest='bugdb', default=None, help='Bug database. For example, github://project-name/')
@@ -63,32 +85,27 @@ class ViewIssue(Command):
     parser = view_issue_parser
 
     def run(self):
-        self.print_issue()
-
-    def print_issue(self):
         issue, comments = self.backend.get_issue(self.args.id)
-        print "Title: " + issue.title
-        print "Creator: " + issue.creator
-        print "Date: " + str(issue.date)
-        print "Open: " + str(issue.status)
-        print
-        print issue.body
-        print
+        print_issue(issue, comments)
 
-        if len(comments) > 0:
-            print "Comments:"
-        for c in comments:
-            print
-            if (c.title != ""):
-                print "    Comment: " + c.title.__class__
-            print "    Author: " + c.creator
-            print "    Date: " + str(c.date)
-            print
-            print "    " + c.body
+
+add_issue_parser = command_parsers.add_parser("add", help="Display an issue")
+add_issue_parser.add_argument('--title', type=str, default = None, help='Title of issue.')
+add_issue_parser.add_argument('--body', type=str, default = None, help='Body of issue.')
+
+class AddIssue(Command):
+    name = "Add an Issue"
+    parser = add_issue_parser
+
+    def run(self):
+        issue = self.backend.add_issue(self.args.title, self.args.body)
+        print_issue(issue, [])
+
 
 
 commands = { "list" : ListCommand,
              "show" : ViewIssue,
+             "add" : AddIssue,
              }
 
 def run_command(backend):

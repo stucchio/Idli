@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import urllib
 import urllib2
 import json
 import datetime
@@ -16,13 +17,21 @@ def catch_url_error(func):
             raise bugger.BuggerException("Could not connect to github. Error: " + str(e))
     return wrapped_func
 
-
 class GithubBackend(bugger.Backend):
     def __init__(self, repostring, auth):
         self.repo_owner, self.repo_name = repostring.split("/")
         self.user = auth[0]
-        self.pwd = auth[1]
+        self.token = auth[1]
         self.__validate()
+        self.add_issue("aye carumba", "el vacilon de la manana")
+
+    @catch_url_error
+    def add_issue(self, title, body):
+        url = github_base_api_url + "issues/open/" + self.repo_owner + "/" + self.repo_name
+        data = urllib.urlencode(self.__post_vars(True, title=title, body=body))
+        request = urllib2.Request(url, data)
+        issue = self.__parse_issue(json.loads(urllib2.urlopen(request).read())["issue"])
+        return issue
 
     @catch_url_error
     def issue_list(self, state=True):
@@ -31,8 +40,7 @@ class GithubBackend(bugger.Backend):
         issue_as_json = json.loads(json_result)
         result = []
         for i in issue_as_json["issues"]:
-            date = self.__parse_date(i["created_at"])
-            result.append(bugger.Issue(i["title"], i["body"], i["number"], i["user"], num_comments = i["comments"], status = i["state"], date=date))
+            result.append(self.__parse_issue(i))
         return result
 
     @catch_url_error
@@ -47,8 +55,7 @@ class GithubBackend(bugger.Backend):
 
         js_issue = issue_as_json["issue"]
         date = self.__parse_date(js_issue["created_at"])
-        issue = bugger.Issue(js_issue["title"], js_issue["body"], js_issue["number"], js_issue["user"], js_issue["state"], js_issue["comments"], date)
-
+        issue = self.__parse_issue(issue_as_json["issue"])
         comments_list = comments_as_json["comments"]
         comment_result = []
         for c in comments_list:
@@ -79,6 +86,20 @@ class GithubBackend(bugger.Backend):
             raise bugger.BuggerException("Can not find repository " + self.repo_name + " on github.")
 
     #Utilities
+    def __parse_issue(self, issue_dict):
+        date = self.__parse_date(issue_dict["created_at"])
+        return bugger.Issue(issue_dict["title"], issue_dict["body"],
+                            issue_dict["number"], issue_dict["user"],
+                            num_comments = issue_dict["comments"], status = issue_dict["state"],
+                            date=date)
+
+
+    def __post_vars(self, with_login=False, **kwargs):
+        if (with_login):
+            kwargs["login"] = self.user
+            kwargs["token"] = self.token
+        return kwargs
+
     def __state_to_gh_state(self, state):
         if (state):
             return "open"
