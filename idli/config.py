@@ -32,13 +32,15 @@ class StoreConfigurationAction(argparse.Action):
         global_cfg.set(self.section, self.name, value)
         global_cfg.write(config_file())
 
-
-def add_store_configuration_parser(parser, section_name, value_name, help):
+def add_store_configuration_parser(parser, section_name, value_name, help, optional = True):
     """A command line actoin to store global configuration options."""
     class StoreAction(StoreConfigurationAction):
         section = section_name
         name = value_name
-    parser.add_argument("--" + value_name, dest=value_name, action = StoreAction, help = help)
+    if (optional):
+        parser.add_argument("--" + value_name, dest=value_name, action = StoreAction, help = help)
+    else:
+        parser.add_argument(value_name, action = StoreAction, help = help)
 
 if __name__=="__main__":
     pass
