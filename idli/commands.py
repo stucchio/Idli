@@ -48,7 +48,7 @@ class Configure(Command):
     parser = configure_parser
 
     def run(self):
-        print "Configuration written to " + config.config_filename()
+        print "Configuration written to " + config.global_config_filename()
 
 list_parser = command_parsers.add_parser("list", help="Print a list of issues")
 list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
