@@ -9,7 +9,6 @@ import argparse
 import idli
 from idli.commands import configure_subparser, init_subparser
 import idli.config as cfg
-from idli.config import StoreConfigurationAction, add_store_configuration_parser
 
 github_base_api_url = "http://github.com/api/v2/json/"
 dateformat = "%Y/%m/%d %H:%M:%S"
@@ -42,18 +41,22 @@ def catch_missing_config(func):
 
 CONFIG_SECTION = "Github"
 
+#We must add parser options for each of init_names
 gh_parser = configure_subparser.add_parser("github", help="Configure github backend.")
-add_store_configuration_parser(gh_parser, CONFIG_SECTION, "user", "Github username", optional=False)
-add_store_configuration_parser(gh_parser, CONFIG_SECTION, "token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.", optional=False)
-
+gh_parser.add_argument("user", help="Github username")
+gh_parser.add_argument("token", help="Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.")
+#We must add parser options for each of config_names
 gh_init_parser = init_subparser.add_parser("github", help="Configure github backend.")
-add_store_configuration_parser(gh_init_parser, CONFIG_SECTION, "repo", "Name of repository", optional=False, global_cfg=False)
-add_store_configuration_parser(gh_init_parser, CONFIG_SECTION, "owner", "Owner of repository (github username).", optional=False, global_cfg=False)
+gh_init_parser.add_argument("repo", help="Name of repository")
+gh_init_parser.add_argument("owner", help="Owner of repository (github username).")
 
 class GithubBackend(idli.Backend):
     name = CONFIG_SECTION
+    init_names = ["repo", "owner"]
+    config_names = ["user", "token"]
 
-    def __init__(self, repo=None, auth = None):
+    def __init__(self, args, repo=None, auth = None):
+        self.args = args
         if (repo is None):
             self.__repo_owner, self.__repo = None, None
         else:

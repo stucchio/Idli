@@ -39,10 +39,21 @@ class Backend(object):
     def initialize(self):
         print "Initializing " + self.name + " project."
         import idli.config as cfg
+        for name in self.init_names:
+            cfg.set_config_value(self.name, name, self.args.__dict__[name], global_val=False)
         cfg.set_config_value("project", "type", self.name, global_val=False)
+        print "Wrote configuration to " + cfg.local_config_filename()
 
-    def configure(self, args):
-        raise IdliException("That functionality is not implemented by this backend.")
+    def configure(self):
+        print "Configuring backend  " + self.name
+        import idli.config as cfg
+        for name in self.config_names:
+            cfg.set_config_value(self.name, name, self.args.__dict__[name], global_val=not self.args.local_only)
+        cfg.set_config_value("project", "type", self.name, global_val=not self.args.local_only)
+        if (not self.args.local_only):
+            print "Wrote configuration to " + cfg.global_config_filename()
+        else:
+            print "Added local configuration to " + cfg.global_config_filename()
 
     def add_issue(self, title, body):
         raise IdliException("That functionality is not implemented by this backend.")

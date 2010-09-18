@@ -54,22 +54,6 @@ def set_config_value(section, name, value, global_val=True):
     else:
         cfg.write(open(local_config_filename(), 'w'))
 
-class StoreConfigurationAction(argparse.Action):
-    global_config = True
-    def __call__(self, parser, namespace, value, option_string=None):
-        set_config_value(self.section, self.name, value, self.global_config)
-
-def add_store_configuration_parser(parser, section_name, value_name, help, global_cfg = True, optional = True):
-    """A command line actoin to store global configuration options."""
-    class StoreAction(StoreConfigurationAction):
-        section = section_name
-        name = value_name
-        global_config = global_cfg
-    if (optional):
-        parser.add_argument("--" + value_name, dest=value_name, action = StoreAction, help = help)
-    else:
-        parser.add_argument(value_name, action = StoreAction, help = help)
-
 #Try to load configuration files. This need not succeed.
 try:
     global_cfg.readfp(open(global_config_filename(), "r+w"))

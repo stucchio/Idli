@@ -25,6 +25,7 @@ def print_issue(issue, comments):
         print
         print "    " + c.body
 
+commands = {}
 
 main_parser = argparse.ArgumentParser(description="Command line bug reporting tool")
 
@@ -35,47 +36,49 @@ class Command(object):
     name = None
     def __init__(self, args, backend = None):
         from idli.backends import get_backend_or_fail
-        self.backend = backend or get_backend_or_fail()()
         self.args = args
+        self.backend = backend or get_backend_or_fail()(self.args)
 
 __date_format = "<%Y/%m/%d %H:%M>"
 
-configure_parser = command_parsers.add_parser("configure", help="Configure a backend.")
-configure_subparser = configure_parser.add_subparsers(help='Backend to configure')
-
-class Configure(Command):
-    parser = configure_parser
-    name = "configure"
+class ConfigureCommand(Command):
+    name = "config"
 
     def __init__(self, args, backend = None):
+        from idli.backends import get_backend_or_fail
         self.args = args
+        self.backend = backend or get_backend_or_fail(args.backend_name)(self.args)
 
     def run(self):
-        print "Configuration written to " + config.global_config_filename()
+        self.backend.configure()
 
-init_parser = command_parsers.add_parser("init", help="Initialize a project")
-init_subparser = init_parser.add_subparsers(dest="backend_name")
+def __register_command(cmd, help):
+    cmd_parser = command_parsers.add_parser(cmd.name, help=help)
+    commands[cmd.name] = cmd
+    return cmd_parser
 
-class Initialize(Command):
+configure_parser = __register_command(ConfigureCommand, help="Configure a backend.")
+configure_subparser = configure_parser.add_subparsers(dest="backend_name", help='Backend to configure')
+configure_parser.add_argument("--local-only", dest="local_only", action='store_const', const=True, default=False, help='If this flag is set, the configuration information will be used only for this project.')
+
+class InitializeCommand(Command):
     parser = configure_parser
     name = "init"
 
     def __init__(self, args, backend = None):
         from idli.backends import get_backend_or_fail
         self.args = args
-        self.backend = backend or get_backend_or_fail(args.backend_name)()
+        self.backend = backend or get_backend_or_fail(args.backend_name)(self.args)
 
     def run(self):
         self.backend.initialize()
         print "Configuration written to " + config.local_config_filename()
 
-list_parser = command_parsers.add_parser("list", help="Print a list of issues")
-list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
-list_parser.add_argument('--limit', dest='limit', type=int, default=None, help = "Number of issues to list")
+init_parser = __register_command(InitializeCommand, help="Initialize a project")
+init_subparser = init_parser.add_subparsers(dest="backend_name")
 
 class ListCommand(Command):
-    name = "List issues"
-    parser = list_parser
+    name = "list"
     date_format = "<%Y/%m/%d %H:%M>"
 
     def run(self):
@@ -104,25 +107,23 @@ class ListCommand(Command):
         for i in issues[0:limit]:
             print self.__format_issue_line(i.hashcode, i.date, i.title, i.creator, i.num_comments)
 
-view_issue_parser = command_parsers.add_parser("show", help="Display an issue")
-view_issue_parser.add_argument('id', type=str, help='issue ID')
+list_parser = __register_command(ListCommand, help="Print a list of issues")
+list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
+list_parser.add_argument('--limit', dest='limit', type=int, default=None, help = "Number of issues to list")
 
-class ViewIssue(Command):
-    name = "List issues"
-    parser = view_issue_parser
+class ViewIssueCommand(Command):
+    name = "show"
 
     def run(self):
         issue, comments = self.backend.get_issue(self.args.id)
         print_issue(issue, comments)
 
+view_issue_parser = __register_command(ViewIssueCommand, help="Display an issue")
+view_issue_parser.add_argument('id', type=str, help='issue ID')
 
-add_issue_parser = command_parsers.add_parser("add", help="Display an issue")
-add_issue_parser.add_argument('--title', type=str, default = None, help='Title of issue.')
-add_issue_parser.add_argument('--body', type=str, default = None, help='Body of issue.')
 
-class AddIssue(Command):
-    name = "Add an Issue"
-    parser = add_issue_parser
+class AddIssueCommand(Command):
+    name = "add"
 
     def run(self):
         title, body = self.get_title_body()
@@ -140,12 +141,10 @@ class AddIssue(Command):
                 raise idli.IdliException("Operation cancelled.")
         return title, body
 
-commands = { "list" : ListCommand,
-             "show" : ViewIssue,
-             "add" : AddIssue,
-             Configure.name : Configure,
-             Initialize.name : Initialize,
-             }
+add_issue_parser = __register_command(AddIssueCommand, help="Display an issue")
+add_issue_parser.add_argument('--title', type=str, default = None, help='Title of issue.')
+add_issue_parser.add_argument('--body', type=str, default = None, help='Body of issue.')
+
 
 def run_command():
     parsed = main_parser.parse_args()
