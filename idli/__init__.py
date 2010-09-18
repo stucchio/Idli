@@ -34,13 +34,19 @@ class IssueComment(object):
 
 class Backend(object):
     def __init__(self):
-        pass
+        raise IdliException("That functionality is not implemented by this backend.")
+
+    def configure(self, args):
+        raise IdliException("That functionality is not implemented by this backend.")
+
+    def add_issue(self, title, body):
+        raise IdliException("That functionality is not implemented by this backend.")
 
     def issue_list(self):
-        pass
+        raise IdliException("That functionality is not implemented by this backend.")
 
-    def display_issue(self):
-        pass
+    def get_issue(self, issue_id):
+        raise IdliException("That functionality is not implemented by this backend.")
 
 class IdliException(Exception):
     def __init__(self, value):

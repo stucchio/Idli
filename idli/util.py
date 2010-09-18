@@ -25,6 +25,11 @@ def get_string_from_editor(base_string, prefix='idli-'):
     result = tf.read()
     return (result, exit_status)
 
+def static_method(meth):
+    def smeth(self, *args, **kwargs):
+        return meth(*args, **kwargs)
+    return smeth
+
 if __name__ == "__main__":
     result, es = get_string_from_editor("test\n\ntest 2 \n")
     print (result, es)

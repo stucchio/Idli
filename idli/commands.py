@@ -1,11 +1,8 @@
 import idli
 import idli.util as util
-import idli.backends.github as gh
+import idli.config as config
 
 import argparse
-
-backend_list = { "github" : gh.GithubBackend,
-                 }
 
 def print_issue(issue, comments):
     print "ID: " + issue.hashcode
@@ -43,6 +40,15 @@ class Command(object):
         self.args = args
 
 __date_format = "<%Y/%m/%d %H:%M>"
+
+configure_parser = command_parsers.add_parser("configure", help="Configure a backend.")
+configure_subparser = configure_parser.add_subparsers(help='Backend to configure')
+
+class Configure(Command):
+    parser = configure_parser
+
+    def run(self):
+        print "Configuration written to " + config.config_filename()
 
 list_parser = command_parsers.add_parser("list", help="Print a list of issues")
 list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
@@ -118,6 +124,7 @@ class AddIssue(Command):
 commands = { "list" : ListCommand,
              "show" : ViewIssue,
              "add" : AddIssue,
+             "configure" : Configure,
              }
 
 def run_command(backend):

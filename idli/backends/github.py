@@ -4,8 +4,14 @@ import urllib
 import urllib2
 import json
 import datetime
+import argparse
 
 import idli
+from idli.commands import configure_subparser
+from idli.config import configuration as cfg
+import idli.config
+from idli.config import StoreConfigurationAction, add_store_configuration_parser
+
 github_base_api_url = "http://github.com/api/v2/json/"
 dateformat = "%Y/%m/%d %H:%M:%S"
 
@@ -26,13 +32,27 @@ def catch_missing_user_repo_404(func):
             raise e
     return wrapped_func
 
+CONFIG_SECTION = "GithubBackend"
 
+gh_parser = configure_subparser.add_parser("github", help="Configure github backend.")
+
+def __check_for_github_section(config):
+    if (not config.has_section(CONFIG_SECTION)):
+        config.add_section(CONFIG_SECTION)
+
+add_store_configuration_parser(gh_parser, "CONFIG_SECTION", "user", "Github username")
+add_store_configuration_parser(gh_parser, "CONFIG_SECTION", "token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.")
 
 class GithubBackend(idli.Backend):
-    def __init__(self, repostring, auth):
+    def __init__(self, repostring, auth = None):
         self.repo_owner, self.repo_name = repostring.split("/")
-        self.user = auth[0]
-        self.token = auth[1]
+
+        if auth is None:
+            self.user = idli.config.get_config_value(CONFIG_SECTION, "user")
+            self.token = idli.config.get_config_value(CONFIG_SECTION, "token")
+        else:
+            self.user = auth[0]
+            self.token = auth[1]
 
     @catch_url_error
     @catch_missing_user_repo_404
