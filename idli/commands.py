@@ -27,8 +27,6 @@ def print_issue(issue, comments):
 
 
 main_parser = argparse.ArgumentParser(description="Command line bug reporting tool")
-main_parser.add_argument('--user', dest='user', default=None, help='Username')
-main_parser.add_argument('--db', dest='bugdb', default=None, help='Bug database. For example, github://project-name/')
 
 command_parsers = main_parser.add_subparsers(title = "Commands", dest="command", help="Command to run.")
 
@@ -49,6 +47,13 @@ class Configure(Command):
 
     def run(self):
         print "Configuration written to " + config.global_config_filename()
+
+class Initialize(Command):
+    parser = configure_parser
+
+    def run(self):
+        print "Project initialized. Configuration written to " + config.local_config_filename()
+
 
 list_parser = command_parsers.add_parser("list", help="Print a list of issues")
 list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')

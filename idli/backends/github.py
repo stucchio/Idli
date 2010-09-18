@@ -48,8 +48,8 @@ def __check_for_github_section(config):
     if (not config.has_section(CONFIG_SECTION)):
         config.add_section(CONFIG_SECTION)
 
-add_store_configuration_parser(gh_parser, "CONFIG_SECTION", "user", "Github username", optional=False)
-add_store_configuration_parser(gh_parser, "CONFIG_SECTION", "token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.", optional=False)
+add_store_configuration_parser(gh_parser, CONFIG_SECTION, "user", "Github username", optional=False)
+add_store_configuration_parser(gh_parser, CONFIG_SECTION, "token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.", optional=False)
 
 class GithubBackend(idli.Backend):
     def __init__(self, repostring, auth = None):
