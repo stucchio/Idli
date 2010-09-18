@@ -1,31 +1,40 @@
 from ConfigParser import ConfigParser, NoSectionError
 import os
 import argparse
+import idli
 
-def config_filename():
+class IdliMissingConfigException(idli.IdliException):
+    def __init__(self, section, key):
+        self.value = (section, key)
+    def __str__(self):
+        return repr(self.value)
+
+def global_config_filename():
     return os.path.join(os.getenv("HOME"), ".idli_config")
 
-def config_file():
-    open(config_filename(),'w').close() # Equivalent to touching the file, make sure it exists first
-    return open(config_filename(),'r+w')
+def global_config_file():
+    open(global_config_filename(),'w').close() # Equivalent to touching the file, make sure it exists first
+    return open(global_config_filename(),'r+w')
 
-configuration = ConfigParser()
-configuration.readfp(config_file())
+global_cfg = ConfigParser()
+global_cfg.readfp(global_config_file())
 
 def get_config_value(section, name):
     try:
-        return configuration.get(section, name)
+        return global_cfg.get(section, name)
     except NoSectionError, e:
-        return None
+        raise IdliMissingConfigException(section, name)
 
 class StoreConfigurationAction(argparse.Action):
     def __call__(self, parser, namespace, value, option_string=None):
-        if (not configuration.has_section(self.section)):
-            configuration.add_section(self.section)
-        configuration.set(self.section, self.name, value)
-        configuration.write(config_file())
+        if (not global_cfg.has_section(self.section)):
+            global_cfg.add_section(self.section)
+        global_cfg.set(self.section, self.name, value)
+        global_cfg.write(config_file())
+
 
 def add_store_configuration_parser(parser, section_name, value_name, help):
+    """A command line actoin to store global configuration options."""
     class StoreAction(StoreConfigurationAction):
         section = section_name
         name = value_name

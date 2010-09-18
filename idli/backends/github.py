@@ -8,8 +8,7 @@ import argparse
 
 import idli
 from idli.commands import configure_subparser
-from idli.config import configuration as cfg
-import idli.config
+import idli.config as cfg
 from idli.config import StoreConfigurationAction, add_store_configuration_parser
 
 github_base_api_url = "http://github.com/api/v2/json/"
@@ -32,6 +31,15 @@ def catch_missing_user_repo_404(func):
             raise e
     return wrapped_func
 
+def catch_missing_config(func):
+    def wrapped_func(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except cfg.IdliMissingConfigException, e:
+            raise idli.IdliException("You must configure idli for github first. Run 'idli configure github' for options.")
+    return wrapped_func
+
+
 CONFIG_SECTION = "GithubBackend"
 
 gh_parser = configure_subparser.add_parser("github", help="Configure github backend.")
@@ -46,14 +54,18 @@ add_store_configuration_parser(gh_parser, "CONFIG_SECTION", "token", "Github api
 class GithubBackend(idli.Backend):
     def __init__(self, repostring, auth = None):
         self.repo_owner, self.repo_name = repostring.split("/")
-
         if auth is None:
-            self.user = idli.config.get_config_value(CONFIG_SECTION, "user")
-            self.token = idli.config.get_config_value(CONFIG_SECTION, "token")
+            self.__user, self.__token = None, None
         else:
-            self.user = auth[0]
-            self.token = auth[1]
+            self.__user, self.__token = auth
 
+    def user(self):
+        return self.__user or cfg.get_config_value(CONFIG_SECTION, "user")
+
+    def token(self):
+        return self.__token or cfg.get_config_value(CONFIG_SECTION, "token")
+
+    @catch_missing_config
     @catch_url_error
     @catch_missing_user_repo_404
     def add_issue(self, title, body):
@@ -128,8 +140,8 @@ class GithubBackend(idli.Backend):
 
     def __post_vars(self, with_login=False, **kwargs):
         if (with_login):
-            kwargs["login"] = self.user
-            kwargs["token"] = self.token
+            kwargs["login"] = self.user()
+            kwargs["token"] = self.token()
         return kwargs
 
     def __state_to_gh_state(self, state):
