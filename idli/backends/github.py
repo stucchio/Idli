@@ -7,7 +7,7 @@ import datetime
 import argparse
 
 import idli
-from idli.commands import configure_subparser
+from idli.commands import configure_subparser, init_subparser
 import idli.config as cfg
 from idli.config import StoreConfigurationAction, add_store_configuration_parser
 
@@ -40,24 +40,34 @@ def catch_missing_config(func):
     return wrapped_func
 
 
-CONFIG_SECTION = "GithubBackend"
+CONFIG_SECTION = "Github"
 
 gh_parser = configure_subparser.add_parser("github", help="Configure github backend.")
-
-def __check_for_github_section(config):
-    if (not config.has_section(CONFIG_SECTION)):
-        config.add_section(CONFIG_SECTION)
-
 add_store_configuration_parser(gh_parser, CONFIG_SECTION, "user", "Github username", optional=False)
 add_store_configuration_parser(gh_parser, CONFIG_SECTION, "token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.", optional=False)
 
+gh_init_parser = init_subparser.add_parser("github", help="Configure github backend.")
+add_store_configuration_parser(gh_init_parser, CONFIG_SECTION, "repo", "Name of repository", optional=False, global_cfg=False)
+add_store_configuration_parser(gh_init_parser, CONFIG_SECTION, "owner", "Owner of repository (github username).", optional=False, global_cfg=False)
+
 class GithubBackend(idli.Backend):
-    def __init__(self, repostring, auth = None):
-        self.repo_owner, self.repo_name = repostring.split("/")
-        if auth is None:
+    name = CONFIG_SECTION
+
+    def __init__(self, repo=None, auth = None):
+        if (repo is None):
+            self.__repo_owner, self.__repo = None, None
+        else:
+            self.repo_owner, self.repo_name = repo
+        if (auth is None):
             self.__user, self.__token = None, None
         else:
             self.__user, self.__token = auth
+
+    def repo(self):
+        return self.__repo or cfg.get_config_value(CONFIG_SECTION, "repo")
+
+    def repo_owner(self):
+        return self.__repo_owner or cfg.get_config_value(CONFIG_SECTION, "owner")
 
     def user(self):
         return self.__user or cfg.get_config_value(CONFIG_SECTION, "user")
@@ -69,7 +79,7 @@ class GithubBackend(idli.Backend):
     @catch_url_error
     @catch_missing_user_repo_404
     def add_issue(self, title, body):
-        url = github_base_api_url + "issues/open/" + self.repo_owner + "/" + self.repo_name
+        url = github_base_api_url + "issues/open/" + self.repo_owner() + "/" + self.repo()
         data = urllib.urlencode(self.__post_vars(True, title=title, body=body))
         request = urllib2.Request(url, data)
         issue = self.__parse_issue(json.loads(urllib2.urlopen(request).read())["issue"])
@@ -78,7 +88,7 @@ class GithubBackend(idli.Backend):
     @catch_url_error
     @catch_missing_user_repo_404
     def issue_list(self, state=True):
-        url = github_base_api_url + "issues/list/" + self.repo_owner + "/" + self.repo_name + "/" + self.__state_to_gh_state(state)
+        url = github_base_api_url + "issues/list/" + self.repo_owner() + "/" + self.repo() + "/" + self.__state_to_gh_state(state)
         json_result = urllib2.urlopen(url).read()
         issue_as_json = json.loads(json_result)
         result = []
@@ -88,8 +98,8 @@ class GithubBackend(idli.Backend):
 
     @catch_url_error
     def get_issue(self, issue_id):
-        issue_url = github_base_api_url + "issues/show/" + self.repo_owner + "/" + self.repo_name + "/" + issue_id
-        comment_url = github_base_api_url + "issues/comments/" + self.repo_owner + "/" + self.repo_name + "/" + issue_id
+        issue_url = github_base_api_url + "issues/show/" + self.repo_owner() + "/" + self.repo() + "/" + issue_id
+        comment_url = github_base_api_url + "issues/comments/" + self.repo_owner() + "/" + self.repo() + "/" + issue_id
         try:
             issue_as_json = json.loads(urllib2.urlopen(issue_url).read())
             comments_as_json = json.loads(urllib2.urlopen(comment_url).read())
@@ -113,21 +123,21 @@ class GithubBackend(idli.Backend):
 
     @catch_url_error
     def __validate_user(self):
-        test_url = github_base_api_url + "user/show/" + self.repo_owner
+        test_url = github_base_api_url + "user/show/" + self.repo_owner()
         try:
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["user"]
         except urllib2.HTTPError, e:
-            raise idli.IdliException("Can not find user " + self.repo_owner + " on github.")
+            raise idli.IdliException("Can not find user " + self.repo_owner() + " on github.")
 
     @catch_url_error
     def __validate_repo(self):
-        test_url = github_base_api_url + "repos/show/" + self.repo_owner + "/" + self.repo_name
+        test_url = github_base_api_url + "repos/show/" + self.repo_owner() + "/" + self.repo()
         try:
             result = json.loads(urllib2.urlopen(test_url).read())
             return result["repository"]
         except urllib2.HTTPError, e:
-            raise idli.IdliException("Can not find repository " + self.repo_name + " on github.")
+            raise idli.IdliException("Can not find repository " + self.repo() + " on github.")
 
     #Utilities
     def __parse_issue(self, issue_dict):

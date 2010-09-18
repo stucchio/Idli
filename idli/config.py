@@ -4,6 +4,7 @@ import argparse
 import idli
 
 IDLI_PROJECT_FILENAME = ".idli"
+IDLI_CONFIG_FILENAME = ".idli_config"
 
 class IdliMissingConfigException(idli.IdliException):
     def __init__(self, section, key):
@@ -12,7 +13,7 @@ class IdliMissingConfigException(idli.IdliException):
         return repr(self.value)
 
 def global_config_filename():
-    return os.path.join(os.getenv("HOME"), ".idli_config")
+    return os.path.join(os.getenv("HOME"), IDLI_CONFIG_FILENAME)
 
 def local_config_filename():
     pwd = os.getenv("PWD")
@@ -39,31 +40,31 @@ def get_config_value(section, name):
         return global_cfg.get(section, name)
     raise IdliMissingConfigException(section, name)
 
+def set_config_value(section, name, value, global_val=True):
+    cfg = global_cfg #Get local or global value
+    if (not global_val):
+        cfg = local_cfg
+
+    if (not cfg.has_section(section)): # Set value
+        cfg.add_section(section)
+    cfg.set(section, name, value)
+
+    if (global_val): # Save file
+        cfg.write(open(global_config_filename(), 'w'))
+    else:
+        cfg.write(open(local_config_filename(), 'w'))
+
 class StoreConfigurationAction(argparse.Action):
-    def __config(self, global_config):
-        if (global_config):
-            return global_cfg
-        else:
-            return local_cfg
+    global_config = True
+    def __call__(self, parser, namespace, value, option_string=None):
+        set_config_value(self.section, self.name, value, self.global_config)
 
-    def __write(self, global_config):
-        if (global_config):
-            self.__config(global_config).write(open(global_config_filename(), 'w'))
-        else:
-            self.__config(global_config).write(open(local_config_filename(), 'w'))
-
-    def __call__(self, parser, namespace, value, option_string=None, global_config=True):
-        cfg = self.__config(global_config)
-        if (not cfg.has_section(self.section)):
-            cfg.add_section(self.section)
-        cfg.set(self.section, self.name, value)
-        self.__write(global_config)
-
-def add_store_configuration_parser(parser, section_name, value_name, help, optional = True):
+def add_store_configuration_parser(parser, section_name, value_name, help, global_cfg = True, optional = True):
     """A command line actoin to store global configuration options."""
     class StoreAction(StoreConfigurationAction):
         section = section_name
         name = value_name
+        global_config = global_cfg
     if (optional):
         parser.add_argument("--" + value_name, dest=value_name, action = StoreAction, help = help)
     else:

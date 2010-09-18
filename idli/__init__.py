@@ -36,6 +36,11 @@ class Backend(object):
     def __init__(self):
         raise IdliException("That functionality is not implemented by this backend.")
 
+    def initialize(self):
+        print "Initializing " + self.name + " project."
+        import idli.config as cfg
+        cfg.set_config_value("project", "type", self.name, global_val=False)
+
     def configure(self, args):
         raise IdliException("That functionality is not implemented by this backend.")
 

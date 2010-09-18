@@ -33,8 +33,9 @@ command_parsers = main_parser.add_subparsers(title = "Commands", dest="command",
 class Command(object):
     parser = None
     name = None
-    def __init__(self, backend, args):
-        self.backend = backend
+    def __init__(self, args, backend = None):
+        from idli.backends import get_backend_or_fail
+        self.backend = backend or get_backend_or_fail()()
         self.args = args
 
 __date_format = "<%Y/%m/%d %H:%M>"
@@ -44,16 +45,29 @@ configure_subparser = configure_parser.add_subparsers(help='Backend to configure
 
 class Configure(Command):
     parser = configure_parser
+    name = "configure"
+
+    def __init__(self, args, backend = None):
+        self.args = args
 
     def run(self):
         print "Configuration written to " + config.global_config_filename()
 
+init_parser = command_parsers.add_parser("init", help="Initialize a project")
+init_subparser = init_parser.add_subparsers(dest="backend_name")
+
 class Initialize(Command):
     parser = configure_parser
+    name = "init"
+
+    def __init__(self, args, backend = None):
+        from idli.backends import get_backend_or_fail
+        self.args = args
+        self.backend = backend or get_backend_or_fail(args.backend_name)()
 
     def run(self):
-        print "Project initialized. Configuration written to " + config.local_config_filename()
-
+        self.backend.initialize()
+        print "Configuration written to " + config.local_config_filename()
 
 list_parser = command_parsers.add_parser("list", help="Print a list of issues")
 list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
@@ -129,14 +143,15 @@ class AddIssue(Command):
 commands = { "list" : ListCommand,
              "show" : ViewIssue,
              "add" : AddIssue,
-             "configure" : Configure,
+             Configure.name : Configure,
+             Initialize.name : Initialize,
              }
 
-def run_command(backend):
+def run_command():
     parsed = main_parser.parse_args()
     cmd_arg = parsed.command
     command = commands[cmd_arg]
-    command_runner = command(backend, parsed)
+    command_runner = command(parsed)
     try:
         result = command_runner.run()
     except idli.IdliException, e:

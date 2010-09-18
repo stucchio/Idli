@@ -7,9 +7,8 @@ import sys
 import argparse
 
 if __name__ == "__main__":
-    import idli.backends.github as gh
-    backend = gh.GithubBackend("stucchio/Test-repo", None)
-    cmds.run_command(backend)
+    from idli.backends import get_backend_or_fail
+    cmds.run_command()
 
 
 
