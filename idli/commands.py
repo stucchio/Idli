@@ -127,7 +127,7 @@ class AddIssueCommand(Command):
     def run(self):
         title, body = self.get_title_body()
         issue = self.backend.add_issue(title, body)
-        print "Comment added!"
+        print "Issue added!"
         print
         print_issue(issue, [])
 

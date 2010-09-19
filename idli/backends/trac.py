@@ -19,6 +19,17 @@ def catch_socket_errors(func):
             return func(*args, **kwargs)
         except socket.gaierror, e:
             raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+        except socket.error, e:
+            raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+        except xmlrpclib.Fault, e:
+            if e.faultCode == 403:
+                raise idli.IdliException("Trac's permissions are not set correctly. Run\n $ trac-admin TRACDIR permission add authenticated XML_RPC\nto enable XML_RPC permissions (which are required by idli).")
+            else:
+                raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+        except xmlrpclib.ProtocolError, e:
+            raise idli.IdliException("Protocol error. This probably means that the XmlRpc plugin for trac is not enabled. Follow the instructions here to install it:\nhttp://trac-hacks.org/wiki/XmlRpcPlugin\n\n"+str(e))
+
+
     return __wrapped
 
 
