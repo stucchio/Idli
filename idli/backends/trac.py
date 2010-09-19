@@ -3,6 +3,7 @@
 from datetime import datetime
 import argparse
 import xmlrpclib
+import socket
 
 import idli
 from idli.commands import configure_subparser, init_subparser
@@ -11,6 +12,15 @@ import idli.config as cfg
 trac_suffix_url = "/login/xmlrpc"
 
 CONFIG_SECTION = "Trac"
+
+def catch_socket_errors(func):
+    def __wrapped(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except socket.gaierror, e:
+            raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+    return __wrapped
+
 
 #We must add parser options for each of init_names
 trac_parser = configure_subparser.add_parser("trac", help="Configure trac backend.")
@@ -30,6 +40,7 @@ class TracBackend(idli.Backend):
         self.args = args
         self.__connection = None
 
+    @catch_socket_errors
     def issue_list(self, state=True):
         conn = self.connection()
         ticket_id_list = []
@@ -42,9 +53,8 @@ class TracBackend(idli.Backend):
 
     ##Minor utilities
     def connection(self):
-        print "Connecting to " + self.__trac_xml_url(self.user(), self.password(), self.server(), self.path())
         if (self.__connection is None):
-            self.__connection = xmlrpclib.ServerProxy(self.__trac_xml_url(self.user(), self.password(), self.server(), self.path()))
+            self.__connection = xmlrpclib.ServerProxy(trac_xml_url())
         return self.__connection
 
     def path(self):
@@ -80,6 +90,9 @@ class TracBackend(idli.Backend):
             return False
         return True
 
-    def __trac_xml_url(self, user, password, server, path):
-        return "http://"+user+":"+password+"@"+server+"/"+path+trac_suffix_url
+def trac_server_url():
+    return "http://" + cfg.get_config_value(CONFIG_SECTION, "server")+"/"+cfg.get_config_value(CONFIG_SECTION, "path")
+
+def trac_xml_url():
+    return "http://"+cfg.get_config_value(CONFIG_SECTION, "user")+":"+cfg.get_config_value(CONFIG_SECTION, "password")+"@"+cfg.get_config_value(CONFIG_SECTION, "server")+"/"+cfg.get_config_value(CONFIG_SECTION, "path")+trac_suffix_url
 
