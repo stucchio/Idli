@@ -121,7 +121,6 @@ class ViewIssueCommand(Command):
 view_issue_parser = __register_command(ViewIssueCommand, help="Display an issue")
 view_issue_parser.add_argument('id', type=str, help='issue ID')
 
-
 class AddIssueCommand(Command):
     name = "add"
 
@@ -144,6 +143,25 @@ class AddIssueCommand(Command):
 add_issue_parser = __register_command(AddIssueCommand, help="Display an issue")
 add_issue_parser.add_argument('--title', type=str, default = None, help='Title of issue.')
 add_issue_parser.add_argument('--body', type=str, default = None, help='Body of issue.')
+
+class ResolveIssueCommand(Command):
+    name = "resolve"
+
+    def run(self):
+        message = self.args.resolve_message
+        if (message is None):
+            message, exit_status = util.get_string_from_editor("Issue resolved.\n# More details go here.", prefix='idli-resolve-')
+        issue = self.backend.resolve_issue(self.args.id, status = self.args.state, message = message)
+        issue, comments = self.backend.get_issue(self.args.id)
+        print "Issue state changed to " + str(self.args.state)
+        print
+        print_issue(issue, comments)
+
+resolve_issue_parser = __register_command(ResolveIssueCommand, help="Resolve an issue")
+resolve_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
+resolve_issue_parser.add_argument('--state', dest='state', type=str, default="closed", choices = ["open", "closed"], help='State of issues to list (open or closed)')
+resolve_issue_parser.add_argument('--message', dest='resolve_message', type=str, default = None, help='Resolution message.')
+
 
 
 def run_command():

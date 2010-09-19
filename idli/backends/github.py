@@ -21,12 +21,15 @@ def catch_url_error(func):
             raise idli.IdliException("Could not connect to github. Error: " + str(e))
     return wrapped_func
 
-def catch_missing_user_repo_404(func):
+def catch_HTTPError(func):
     def wrapped_func(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
         except urllib2.HTTPError, e:
-            self.validate()
+            if (e.code == 401):
+                raise idli.IdliException("Authentication failed.\n\nCheck your idli configuration. The most likely cause is incorrect values for 'user' or 'token' variables in the [Github] section of the configuration files:\n    " + cfg.local_config_filename() + "\n    " + cfg.global_config_filename() + ".\n\nMake sure you check both files - the values in " + cfg.local_config_filename() + " will override the values in " + cfg.global_config_filename() + ".")
+            if (e.code == 404):
+                self.validate()
             raise e
     return wrapped_func
 
@@ -80,7 +83,7 @@ class GithubBackend(idli.Backend):
 
     @catch_missing_config
     @catch_url_error
-    @catch_missing_user_repo_404
+    @catch_HTTPError
     def add_issue(self, title, body):
         url = github_base_api_url + "issues/open/" + self.repo_owner() + "/" + self.repo()
         data = urllib.urlencode(self.__post_vars(True, title=title, body=body))
@@ -89,7 +92,7 @@ class GithubBackend(idli.Backend):
         return issue
 
     @catch_url_error
-    @catch_missing_user_repo_404
+    @catch_HTTPError
     def issue_list(self, state=True):
         url = github_base_api_url + "issues/list/" + self.repo_owner() + "/" + self.repo() + "/" + self.__state_to_gh_state(state)
         json_result = urllib2.urlopen(url).read()
@@ -116,8 +119,31 @@ class GithubBackend(idli.Backend):
         comments_list = comments_as_json["comments"]
         comment_result = []
         for c in comments_list:
-            comment_result.append(idli.IssueComment(issue, c["user"], "", c["body"], self.__parse_date(c["created_at"])))
+            comment_result.append(self.__parse_comment(issue, c))
         return (issue, comment_result)
+
+    @catch_missing_config
+    @catch_url_error
+    @catch_HTTPError
+    def add_comment(self, issue_id, body):
+        url = github_base_api_url + "issues/comment/" + self.repo_owner() + "/" + self.repo() + "/" + str(issue_id)
+        data = urllib.urlencode(self.__post_vars(False, comment=body))
+        request = urllib2.Request(url, data)
+        comment = self.__parse_comment(None, json.loads(urllib2.urlopen(request).read())['comment'])
+        return comment
+
+    @catch_missing_config
+    @catch_url_error
+    @catch_HTTPError
+    def resolve_issue(self, issue_id, status = "closed", message = None):
+        self.add_comment(issue_id, message)
+        status_url = self.__resolution_code_to_url[status]
+        url = github_base_api_url + "issues/" + status_url + "/" + self.repo_owner() + "/" + self.repo() + "/" + str(issue_id)
+        data = urllib.urlencode(self.__post_vars(True))
+        request = urllib2.Request(url, data)
+        issue = self.__parse_issue(json.loads(urllib2.urlopen(request).read())["issue"])
+        return issue
+    __resolution_code_to_url = { "closed" : "close", "open" : "reopen" }
 
     #Github queries
     def validate(self):
@@ -143,13 +169,15 @@ class GithubBackend(idli.Backend):
             raise idli.IdliException("Can not find repository " + self.repo() + " on github.")
 
     #Utilities
+    def __parse_comment(self, issue, cdict):
+        return idli.IssueComment(issue, cdict["user"], "", cdict["body"], self.__parse_date(cdict["created_at"]))
+
     def __parse_issue(self, issue_dict):
         create_time = self.__parse_date(issue_dict["created_at"])
         return idli.Issue(issue_dict["title"], issue_dict["body"],
                             issue_dict["number"], issue_dict["user"],
                             num_comments = issue_dict["comments"], status = issue_dict["state"],
                             create_time=create_time)
-
 
     def __post_vars(self, with_login=False, **kwargs):
         if (with_login):

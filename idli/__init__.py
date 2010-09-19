@@ -57,16 +57,26 @@ class Backend(object):
             print "Added local configuration to " + cfg.global_config_filename()
 
     def add_issue(self, title, body):
-        raise IdliException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def issue_list(self, state=True):
-        raise IdliException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def get_issue(self, issue_id):
-        raise IdliException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
+    def resolve_issue(self, issue_id, status = "Closed", message = None):
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
+    def add_comment(self, issue_id, body):
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
 
 class IdliException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
+class IdliNotImplementedException(IdliException):
+    pass
