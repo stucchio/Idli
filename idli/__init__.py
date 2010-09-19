@@ -65,7 +65,7 @@ class Backend(object):
     def get_issue(self, issue_id):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
-    def resolve_issue(self, issue_id, status = "Closed", message = None):
+    def resolve_issue(self, issue_id, status = "closed", message = None):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def add_comment(self, issue_id, body):

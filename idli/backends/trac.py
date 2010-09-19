@@ -53,10 +53,21 @@ class TracBackend(idli.Backend):
         return [self.__convert_issue(t) for t in multicall()]
 
     @catch_socket_errors
+    def get_issue(self, issue_id):
+        return (self.__convert_issue(self.ticket_api().get(int(issue_id))), [])
+
+    @catch_socket_errors
+    def resolve_issue(self, issue_id, status = "closed", message = None):
+        actions = self.ticket_api().getActions(issue_id)
+        if ('resolve' in [a[0] for a in actions]):
+            ticket = self.ticket_api().update(int(issue_id), message, { 'status' : 'fixed', 'action' : 'resolve'})
+            return self.__convert_issue(ticket)
+        raise idli.IdliException("Can not resolve issue " + issue_id + ". Perhaps it is already resolved?")
+
+    @catch_socket_errors
     def add_issue(self, title, body):
         ticket_id = self.ticket_api().create(title, body)
         return self.__convert_issue(self.ticket_api().get(ticket_id))
-
 
     ##Minor utilities
     def ticket_api(self):
