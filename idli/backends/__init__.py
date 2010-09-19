@@ -1,8 +1,10 @@
 import github
+import trac
 import sys
 import idli.config as cfg
 
 backend_list = { "github" : github.GithubBackend,
+                 "trac" : trac.TracBackend,
                  }
 
 def get_backend_or_fail(backend_name = None):

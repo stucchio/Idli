@@ -1,14 +1,15 @@
 #!/usr/bin/python
 
 class Issue(object):
-    def __init__(self, title, body, hashcode, creator, status = True, num_comments = None, date=None):
+    def __init__(self, title, body, hashcode, creator, status = True, num_comments = None, create_time=None, last_modified=None, owner=None):
         self.title = title
         self.body = body
         self.hashcode = str(hashcode)
         self.creator = creator
         self.num_comments = int(num_comments or 0)
         self.status = self.__parse_status(status)
-        self.date = date
+        self.create_time = create_time
+        self.last_modified = last_modified
 
     def __parse_status(self, status):
         if (status.__class__ == bool):
@@ -58,7 +59,7 @@ class Backend(object):
     def add_issue(self, title, body):
         raise IdliException("That functionality is not implemented by this backend.")
 
-    def issue_list(self):
+    def issue_list(self, state=True):
         raise IdliException("That functionality is not implemented by this backend.")
 
     def get_issue(self, issue_id):

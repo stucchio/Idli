@@ -8,7 +8,7 @@ def print_issue(issue, comments):
     print "ID: " + issue.hashcode
     print "Title: " + issue.title
     print "Creator: " + issue.creator
-    print "Date: " + str(issue.date)
+    print "Create time: " + str(issue.create_time)
     print "Open: " + str(issue.status)
     print
     print issue.body
@@ -105,7 +105,7 @@ class ListCommand(Command):
         if (limit is None):
             limit = len(issues)
         for i in issues[0:limit]:
-            print self.__format_issue_line(i.hashcode, i.date, i.title, i.creator, i.num_comments)
+            print self.__format_issue_line(i.hashcode, i.create_time, i.title, i.creator, i.num_comments)
 
 list_parser = __register_command(ListCommand, help="Print a list of issues")
 list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')

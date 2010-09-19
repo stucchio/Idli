@@ -144,11 +144,11 @@ class GithubBackend(idli.Backend):
 
     #Utilities
     def __parse_issue(self, issue_dict):
-        date = self.__parse_date(issue_dict["created_at"])
+        create_time = self.__parse_date(issue_dict["created_at"])
         return idli.Issue(issue_dict["title"], issue_dict["body"],
                             issue_dict["number"], issue_dict["user"],
                             num_comments = issue_dict["comments"], status = issue_dict["state"],
-                            date=date)
+                            create_time=create_time)
 
 
     def __post_vars(self, with_login=False, **kwargs):
