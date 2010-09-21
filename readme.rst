@@ -8,20 +8,27 @@ A command line interface to bug trackers
 Introduction
 ============
 
+Documentation is incomplete...
+
+
 Motivation
 ----------
 Idli is a command line interface to bug tracking tools. The goal is simple. To
 add a bug to a project, you can visit your bug tracker's website and use the web
 interface.
 
-Or you can simply type::
+I (the author) prefer the command line::
     $ idli add --title "The frobnicator is broken." --body "The frobnicator does not frobnicate."
+
+
+Installation
+============
+
 
 Usage
 =====
-
-Setup
------
+Setting up an idli project
+--------------------------
 
 To begin, you need to initialize an idli project. The general format for doing this is::
     $ cd project_dir
@@ -70,4 +77,28 @@ To view a bug in more detail::
 To resolve a bug::
     $ idli resolve 11 --message "Issue resolved by fixing the frobnicator."
 
+Backends
+========
+
+Details go here...
+
+Trac
+----
+
+Setting up trac
+~~~~~~~~~~~~~~~
+
+Idli can be used with trac, but this requires the xmlrpc plugin for trac to be enabled.
+
+First, the xmlrpc plugin for trac must be installed::
+    $ easy_install -Z -U http://trac-hacks.org/svn/xmlrpcplugin/trunk
+
+The website for the plugin is here: http://trac-hacks.org/wiki/XmlRpcPlugin
+
+Then it must be enabled. This can be done by adding the following to your trac.ini file::
+    [components]
+    tracrpc.* = enabled
+
+Lastly, xmlrpc permissions must be given to authenticated users::
+    $ trac-admin TRAC_DIRECTORY permission add authenticated XML_RPC
 
