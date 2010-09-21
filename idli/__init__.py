@@ -38,18 +38,20 @@ class Backend(object):
         raise IdliException("That functionality is not implemented by this backend.")
 
     def initialize(self):
+        section_name = self.config_section or self.name
         print "Initializing " + self.name + " project."
         import idli.config as cfg
         for name in self.init_names:
-            cfg.set_config_value(self.name, name, self.args.__dict__[name], global_val=False)
+            cfg.set_config_value(section_name, name, self.args.__dict__[name], global_val=False)
         cfg.set_config_value("project", "type", self.name, global_val=False)
         print "Wrote configuration to " + cfg.local_config_filename()
 
     def configure(self):
+        section_name = self.config_section or self.name
         print "Configuring backend  " + self.name
         import idli.config as cfg
         for name in self.config_names:
-            cfg.set_config_value(self.name, name, self.args.__dict__[name], global_val=not self.args.local_only)
+            cfg.set_config_value(section_name, name, self.args.__dict__[name], global_val=not self.args.local_only)
         cfg.set_config_value("project", "type", self.name, global_val=not self.args.local_only)
         if (not self.args.local_only):
             print "Wrote configuration to " + cfg.global_config_filename()
@@ -70,7 +72,6 @@ class Backend(object):
 
     def add_comment(self, issue_id, body):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
-
 
 class IdliException(Exception):
     def __init__(self, value):

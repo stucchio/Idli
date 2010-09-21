@@ -1,12 +1,10 @@
 #!/usr/bin/python
 
 from datetime import datetime
-import argparse
 import xmlrpclib
 import socket
 
 import idli
-from idli.commands import configure_subparser, init_subparser
 import idli.config as cfg
 
 trac_suffix_url = "/login/xmlrpc"
@@ -28,24 +26,17 @@ def catch_socket_errors(func):
                 raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
         except xmlrpclib.ProtocolError, e:
             raise idli.IdliException("Protocol error. This probably means that the XmlRpc plugin for trac is not enabled. Follow the instructions here to install it:\nhttp://trac-hacks.org/wiki/XmlRpcPlugin\n\n"+str(e))
-
-
     return __wrapped
 
-
-#We must add parser options for each of init_names
-trac_parser = configure_subparser.add_parser("trac", help="Configure trac backend.")
-trac_parser.add_argument("user", help="Trac username")
-trac_parser.add_argument("password", help="Trac login password.")
-#We must add parser options for each of config_names
-trac_init_parser = init_subparser.add_parser("trac", help="Configure trac backend.")
-trac_init_parser.add_argument("path", help="Name of repository")
-trac_init_parser.add_argument("server", help="URL of trac server.")
-
 class TracBackend(idli.Backend):
-    name = CONFIG_SECTION
-    init_names = ["path", "server"]
-    config_names = ["user", "password"]
+    config_section = CONFIG_SECTION
+    name = "trac"
+    init_names = { "path" : "Name of repository",
+                   "server" : "URL of trac server.",
+                   }
+    config_names = {"user" : "Trac username",
+                    "password" : "Trac login password.",
+                    }
 
     def __init__(self, args):
         self.args = args
@@ -70,6 +61,7 @@ class TracBackend(idli.Backend):
     @catch_socket_errors
     def resolve_issue(self, issue_id, status = "closed", message = None):
         actions = self.ticket_api().getActions(issue_id)
+        print actions
         if ('resolve' in [a[0] for a in actions]):
             ticket = self.ticket_api().update(int(issue_id), message, { 'status' : 'fixed', 'action' : 'resolve'})
             return self.__convert_issue(ticket)

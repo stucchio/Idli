@@ -4,10 +4,8 @@ import urllib
 import urllib2
 import json
 import datetime
-import argparse
 
 import idli
-from idli.commands import configure_subparser, init_subparser
 import idli.config as cfg
 
 github_base_api_url = "http://github.com/api/v2/json/"
@@ -41,22 +39,17 @@ def catch_missing_config(func):
             raise idli.IdliException("You must configure idli for github first. Run 'idli configure github' for options.")
     return wrapped_func
 
-
 CONFIG_SECTION = "Github"
 
-#We must add parser options for each of init_names
-gh_parser = configure_subparser.add_parser("github", help="Configure github backend.")
-gh_parser.add_argument("user", help="Github username")
-gh_parser.add_argument("token", help="Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.")
-#We must add parser options for each of config_names
-gh_init_parser = init_subparser.add_parser("github", help="Configure github backend.")
-gh_init_parser.add_argument("repo", help="Name of repository")
-gh_init_parser.add_argument("owner", help="Owner of repository (github username).")
-
 class GithubBackend(idli.Backend):
-    name = CONFIG_SECTION
-    init_names = ["repo", "owner"]
-    config_names = ["user", "token"]
+    name = "github"
+    config_section = "Github"
+    init_names = { "repo" : "Name of repository",
+                   "owner" : "Owner of repository (github username).",
+                   }
+    config_names = { "user" : "Github username",
+                     "token" : "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.",
+                     }
 
     def __init__(self, args, repo=None, auth = None):
         self.args = args
