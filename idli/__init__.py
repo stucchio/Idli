@@ -10,6 +10,7 @@ class Issue(object):
         self.status = self.__parse_status(status)
         self.create_time = create_time
         self.last_modified = last_modified
+        self.owner = owner
 
     def __parse_status(self, status):
         if (status.__class__ == bool):

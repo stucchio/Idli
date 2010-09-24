@@ -10,6 +10,8 @@ def print_issue(issue, comments):
     print "Creator: " + issue.creator
     print "Create time: " + str(issue.create_time)
     print "Open: " + str(issue.status)
+    if not (issue.owner is None):
+        print "Owner: " + str(issue.owner)
     print
     print issue.body
     print
