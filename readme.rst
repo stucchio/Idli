@@ -85,14 +85,18 @@ To resolve a bug::
 
     $ idli resolve 11 --message "Issue resolved by fixing the frobnicator."
 
-To assign a bug (does not work in all backends)::
+To assign a bug::
 
     $ idli assign 11 scotty "I need warp drive now."
 
+Backends vary
+~~~~~~~~~~~~~
+
+Not all features work in all backends. Github, for example, does not support assigning
+a bug to a user.
+
 Backends
 ========
-
-Details go here...
 
 Github
 ------
@@ -123,6 +127,10 @@ This will set the USER/TOKEN for the current project only.
 
 Trac
 ----
+Trac is much the same is github, but with slightly different parameters::
+
+    $ idli config trac USER PASSWORD
+    $ idli init SERVER PATH
 
 Setting up trac
 ~~~~~~~~~~~~~~~
@@ -144,3 +152,42 @@ Lastly, xmlrpc permissions must be given to authenticated users::
 
     $ trac-admin TRAC_DIRECTORY permission add authenticated XML_RPC
 
+Adding new backends
+-------------------
+
+New backends can be added to idli by subclassing idli.Backend. For example,
+the GithubBackend has the following general structure:
+
+    class GithubBackend(idli.Backend):
+        name = "github"
+        config_section = "Github"
+        init_names = { "repo" : "Name of repository",
+                       "owner" : "Owner of repository (github username).",
+                       }
+        config_names = [ ("user", "Github username"),
+                         ("token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.")
+                         ]
+
+The `init_names` and `config_names` parameters are used to create the arguments for `idli init`
+and `idli config` respectively. These parameters can be retrieved using self.get_config(name)
+(i.e., in a GithubBackend method, one can call `self.get_config("repo")` to get the name of
+the reposuitory).
+
+Then, various specific methods must be build::
+
+    def add_issue(self, title, body): #Adds issue
+        ...Implementation details...
+
+    def issue_list(self, state=True): #Returns a list of idli.Issue objects - state is whether they are open or closed
+        ...Implementation details...
+
+etc. For a full listing, see the file idli/__init__.py. Any method which raises an `IdliNotImplementedException`
+must be overridden (if possible).
+
+To report errors to the user, you should raise an `idli.IdliException("error message")` from within the backend::
+
+    def issue_list(self, state=True):
+        ...Implementation details...
+        raise idli.IdliException("Github hates us!")
+
+...More details...
