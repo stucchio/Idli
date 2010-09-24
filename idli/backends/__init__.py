@@ -9,13 +9,20 @@ backend_list = { }
 def register_backend(backend):
     #We must add parser options for each of init_names
     config_parser = configure_subparser.add_parser(backend.name, help="Configure " + backend.name + " backend.")
-    for (cmd, help) in backend.config_names.iteritems():
-        config_parser.add_argument(cmd, help=help)
+    __add_items_to_parser(backend.config_names, config_parser)
     init_parser = init_subparser.add_parser(backend.name, help="Configure " + backend.name + " backend.")
-    for (cmd, help) in backend.init_names.iteritems():
-        init_parser.add_argument(cmd, help=help)
+    __add_items_to_parser(backend.init_names, init_parser)
 
     backend_list[backend.name] = backend
+
+def __add_items_to_parser(items, parser):
+    if items.__class__ == dict:
+        for (cmd, help) in items.iteritems():
+            parser.add_argument(cmd, help=help)
+    if items.__class__ == list:
+        for (cmd, help) in items:
+            parser.add_argument(cmd, help=help)
+
 
 def get_backend_or_fail(backend_name = None):
     try:

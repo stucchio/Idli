@@ -99,7 +99,7 @@ Github
 Idli can connect to the bug tracker at github. To use, first you need
 to configure idli with your github login information::
 
-    $ idli config github TOKEN USER
+    $ idli config github USER TOKEN
 
 Here, USER is your username and TOKEN is your github API token. The TOKEN
 can be accessed by logging in to github, proceeding to https://github.com/account
@@ -113,6 +113,13 @@ To initialize a github project::
 
 Here, REPO is the name of the repository (e.g., 'idli') and OWNER is the github
 username of the project owner (e.g., 'stucchio').
+
+If you wish to use a separate USER/TOKEN pair for a specific project, after calling
+`idli init`, you can use::
+
+    $ idli config --local-only USER TOKEN
+
+This will set the USER/TOKEN for the current project only.
 
 Trac
 ----
