@@ -31,12 +31,12 @@ def catch_socket_errors(func):
 class TracBackend(idli.Backend):
     config_section = CONFIG_SECTION
     name = "trac"
-    init_names = { "path" : "Name of repository",
-                   "server" : "URL of trac server.",
-                   }
-    config_names = {"user" : "Trac username",
-                    "password" : "Trac login password.",
-                    }
+    init_names = [ ("server", "URL of trac server."),
+                   ("path", "Name of repository")
+                   ]
+    config_names = [("user", "Trac username"),
+                    ("password", "Trac login password.")
+                    ]
 
     def __init__(self, args):
         self.args = args
@@ -90,16 +90,16 @@ class TracBackend(idli.Backend):
         return self.__connection
 
     def path(self):
-        return cfg.get_config_value(CONFIG_SECTION, "path")
+        return self.get_config("path")
 
     def server(self):
-        return cfg.get_config_value(CONFIG_SECTION, "server")
+        return self.get_config("server")
 
     def user(self):
-        return cfg.get_config_value(CONFIG_SECTION, "user")
+        return self.get_config("user")
 
     def password(self):
-        return cfg.get_config_value(CONFIG_SECTION, "password")
+        return self.get_config("password")
 
     def __convert_issue(self, t):
         issue_id = t[0]

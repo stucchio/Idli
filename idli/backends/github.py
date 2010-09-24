@@ -63,16 +63,16 @@ class GithubBackend(idli.Backend):
             self.__user, self.__token = auth
 
     def repo(self):
-        return self.__repo or cfg.get_config_value(CONFIG_SECTION, "repo")
+        return self.__repo or self.get_config("repo")
 
     def repo_owner(self):
-        return self.__repo_owner or cfg.get_config_value(CONFIG_SECTION, "owner")
+        return self.__repo_owner or self.get_config("owner")
 
     def user(self):
-        return self.__user or cfg.get_config_value(CONFIG_SECTION, "user")
+        return self.__user or self.get_config("user")
 
     def token(self):
-        return self.__token or cfg.get_config_value(CONFIG_SECTION, "token")
+        return self.__token or self.get_config("token")
 
     @catch_missing_config
     @catch_url_error

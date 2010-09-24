@@ -77,6 +77,11 @@ class Backend(object):
     def assign_issue(self, issue_id, user, message):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
+    #Utilities
+    def get_config(self, name):
+        import idli.config as cfg
+        return cfg.get_config_value(self.config_section, name)
+
 class IdliException(Exception):
     def __init__(self, value):
         self.value = value
