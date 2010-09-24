@@ -85,10 +85,34 @@ To resolve a bug::
 
     $ idli resolve 11 --message "Issue resolved by fixing the frobnicator."
 
+To assign a bug (does not work in all backends)::
+
+    $ idli assign 11 scotty "I need warp drive now."
+
 Backends
 ========
 
 Details go here...
+
+Github
+------
+Idli can connect to the bug tracker at github. To use, first you need
+to configure idli with your github login information::
+
+    $ idli config github TOKEN USER
+
+Here, USER is your username and TOKEN is your github API token. The TOKEN
+can be accessed by logging in to github, proceeding to https://github.com/account
+and selecting "Account Admin".
+
+This need only be done once per computer.
+
+To initialize a github project::
+
+    $ idli init github REPO OWNER
+
+Here, REPO is the name of the repository (e.g., 'idli') and OWNER is the github
+username of the project owner (e.g., 'stucchio').
 
 Trac
 ----
