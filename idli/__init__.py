@@ -73,6 +73,9 @@ class Backend(object):
     def add_comment(self, issue_id, body):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
+    def assign_issue(self, issue_id, user, message):
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
 class IdliException(Exception):
     def __init__(self, value):
         self.value = value

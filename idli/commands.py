@@ -162,7 +162,23 @@ resolve_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
 resolve_issue_parser.add_argument('--state', dest='state', type=str, default="closed", choices = ["open", "closed"], help='State of issues to list (open or closed)')
 resolve_issue_parser.add_argument('--message', dest='resolve_message', type=str, default = None, help='Resolution message.')
 
+class AssignIssueCommand(Command):
+    name = "assign"
 
+    def run(self):
+        message = self.args.resolve_message
+        if (message is None):
+            message, exit_status = util.get_string_from_editor("Please resolve this issue.", prefix='idli-assign-')
+        issue = self.backend.assign_issue(self.args.id, user=self.args.user, message = message)
+        issue, comments = self.backend.get_issue(self.args.id)
+        print "Issue " + self.args.id + " assigned to " + str(self.args.user)
+        print
+        print_issue(issue, comments)
+
+assign_issue_parser = __register_command(AssignIssueCommand, help="Assign issue to user.")
+assign_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
+assign_issue_parser.add_argument(dest='user', type=str, help="username.")
+assign_issue_parser.add_argument('--message', dest='resolve_message', type=str, default = None, help='Resolution message.')
 
 def run_command():
     parsed = main_parser.parse_args()
