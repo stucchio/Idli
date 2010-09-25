@@ -30,6 +30,29 @@ def static_method(meth):
         return meth(*args, **kwargs)
     return smeth
 
+def print_issue(issue, comments):
+    print "ID: " + issue.hashcode
+    print "Title: " + issue.title
+    print "Creator: " + issue.creator
+    print "Create time: " + str(issue.create_time)
+    print "Open: " + str(issue.status)
+    if not (issue.owner is None):
+        print "Owner: " + str(issue.owner)
+    print
+    print issue.body
+    print
+
+    if len(comments) > 0:
+        print "Comments:"
+    for c in comments:
+        print
+        if (c.title != ""):
+            print "    Comment: " + c.title.__class__
+        print "    Author: " + c.creator
+        print "    Date: " + str(c.date)
+        print
+        print "    " + c.body
+
 if __name__ == "__main__":
     result, es = get_string_from_editor("test\n\ntest 2 \n")
     print (result, es)

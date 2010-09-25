@@ -4,29 +4,6 @@ import idli.config as config
 
 import argparse
 
-def print_issue(issue, comments):
-    print "ID: " + issue.hashcode
-    print "Title: " + issue.title
-    print "Creator: " + issue.creator
-    print "Create time: " + str(issue.create_time)
-    print "Open: " + str(issue.status)
-    if not (issue.owner is None):
-        print "Owner: " + str(issue.owner)
-    print
-    print issue.body
-    print
-
-    if len(comments) > 0:
-        print "Comments:"
-    for c in comments:
-        print
-        if (c.title != ""):
-            print "    Comment: " + c.title.__class__
-        print "    Author: " + c.creator
-        print "    Date: " + str(c.date)
-        print
-        print "    " + c.body
-
 commands = {}
 
 main_parser = argparse.ArgumentParser(description="Command line bug reporting tool")
@@ -118,7 +95,7 @@ class ViewIssueCommand(Command):
 
     def run(self):
         issue, comments = self.backend.get_issue(self.args.id)
-        print_issue(issue, comments)
+        util.print_issue(issue, comments)
 
 view_issue_parser = __register_command(ViewIssueCommand, help="Display an issue")
 view_issue_parser.add_argument('id', type=str, help='issue ID')
@@ -131,7 +108,7 @@ class AddIssueCommand(Command):
         issue = self.backend.add_issue(title, body)
         print "Issue added!"
         print
-        print_issue(issue, [])
+        util.print_issue(issue, [])
 
     def get_title_body(self):
         title = self.args.title or ""
@@ -157,7 +134,7 @@ class ResolveIssueCommand(Command):
         issue, comments = self.backend.get_issue(self.args.id)
         print "Issue state changed to " + str(self.args.state)
         print
-        print_issue(issue, comments)
+        util.print_issue(issue, comments)
 
 resolve_issue_parser = __register_command(ResolveIssueCommand, help="Resolve an issue")
 resolve_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
@@ -175,7 +152,7 @@ class AssignIssueCommand(Command):
         issue, comments = self.backend.get_issue(self.args.id)
         print "Issue " + self.args.id + " assigned to " + str(self.args.user)
         print
-        print_issue(issue, comments)
+        util.print_issue(issue, comments)
 
 assign_issue_parser = __register_command(AssignIssueCommand, help="Assign issue to user.")
 assign_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
