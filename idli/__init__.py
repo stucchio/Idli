@@ -51,7 +51,7 @@ class Backend(object):
         section_name = self.config_section or self.name
         print "Configuring backend  " + self.name
         import idli.config as cfg
-        for name in self.config_names:
+        for (name,help) in self.config_names:
             cfg.set_config_value(section_name, name, self.args.__dict__[name], global_val=not self.args.local_only)
         cfg.set_config_value("project", "type", self.name, global_val=not self.args.local_only)
         if (not self.args.local_only):

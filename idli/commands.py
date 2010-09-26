@@ -13,6 +13,10 @@ command_parsers = main_parser.add_subparsers(title = "Commands", dest="command",
 class Command(object):
     parser = None
     name = None
+    flags = {}
+    args = {}
+    options = {}
+
     def __init__(self, args, backend = None):
         from idli.backends import get_backend_or_fail
         self.args = args
@@ -22,6 +26,8 @@ __date_format = "<%Y/%m/%d %H:%M>"
 
 class ConfigureCommand(Command):
     name = "config"
+    flags = [ ("local_only", 'If this flag is set, the configuration information will be used only for this project.'),
+              ]
 
     def __init__(self, args, backend = None):
         from idli.backends import get_backend_or_fail
@@ -33,12 +39,18 @@ class ConfigureCommand(Command):
 
 def __register_command(cmd, help):
     cmd_parser = command_parsers.add_parser(cmd.name, help=help)
+    for (name, help) in cmd.flags: # Configure flags.
+        cmd_parser.add_argument('--' + name.replace('_','-'), dest=name, action='store_const', const=True, default=False, help=help)
+    for name, args in cmd.options: # Configure options
+        cmd_parser.add_argument('--'+name, dest=name, **args)
+
+    for (name, args) in cmd.args: # Configure arguments
+        cmd_parser.add_argument(dest=name, **args)
     commands[cmd.name] = cmd
     return cmd_parser
 
 configure_parser = __register_command(ConfigureCommand, help="Configure a backend.")
 configure_subparser = configure_parser.add_subparsers(dest="backend_name", help='Backend to configure')
-configure_parser.add_argument("--local-only", dest="local_only", action='store_const', const=True, default=False, help='If this flag is set, the configuration information will be used only for this project.')
 
 class InitializeCommand(Command):
     parser = configure_parser
@@ -58,6 +70,10 @@ init_subparser = init_parser.add_subparsers(dest="backend_name")
 
 class ListCommand(Command):
     name = "list"
+    options = [ ('state', { 'type' : str, 'default' : "open", 'choices' : ["open", "closed"], 'help' : 'State of issues to list (open or closed)' } ),
+                ('limit', { 'type' : int, 'default' : None, 'help' : "Number of issues to list" } )
+                ]
+
     date_format = "<%Y/%m/%d %H:%M>"
 
     def run(self):
@@ -87,21 +103,22 @@ class ListCommand(Command):
             print self.__format_issue_line(i.hashcode, i.create_time, i.title, i.creator, i.num_comments)
 
 list_parser = __register_command(ListCommand, help="Print a list of issues")
-list_parser.add_argument('--state', dest='state', type=str, default="open", choices = ["open", "closed"], help='State of issues to list (open or closed)')
-list_parser.add_argument('--limit', dest='limit', type=int, default=None, help = "Number of issues to list")
 
 class ViewIssueCommand(Command):
     name = "show"
+    args = [('id', { 'type' : str, 'help' : 'issue ID' }), ]
 
     def run(self):
         issue, comments = self.backend.get_issue(self.args.id)
         util.print_issue(issue, comments)
 
 view_issue_parser = __register_command(ViewIssueCommand, help="Display an issue")
-view_issue_parser.add_argument('id', type=str, help='issue ID')
 
 class AddIssueCommand(Command):
     name = "add"
+    options = [ ('title', { 'type' : str, 'default' : None, 'help' : 'Title of issue.' } ),
+                ('body', { 'type' : str, 'default' : None, 'help' : 'Body of issue.' } )
+                ]
 
     def run(self):
         title, body = self.get_title_body()
@@ -120,14 +137,16 @@ class AddIssueCommand(Command):
         return title, body
 
 add_issue_parser = __register_command(AddIssueCommand, help="Display an issue")
-add_issue_parser.add_argument('--title', type=str, default = None, help='Title of issue.')
-add_issue_parser.add_argument('--body', type=str, default = None, help='Body of issue.')
 
 class ResolveIssueCommand(Command):
     name = "resolve"
+    options = [ ('state', { 'type':str, 'default': "closed", 'choices' : ["open", "closed"], 'help':'State of issues to list (open or closed)' } ),
+                ('message', { 'type' : str, 'default' : None, 'help':'Resolution message.' } ),
+                ]
+    args = [ ('id', { 'type' :str, 'help' : "ID of issue." } ), ]
 
     def run(self):
-        message = self.args.resolve_message
+        message = self.args.message
         if (message is None):
             message, exit_status = util.get_string_from_editor("Issue resolved.\n# More details go here.", prefix='idli-resolve-')
         issue = self.backend.resolve_issue(self.args.id, status = self.args.state, message = message)
@@ -137,15 +156,16 @@ class ResolveIssueCommand(Command):
         util.print_issue(issue, comments)
 
 resolve_issue_parser = __register_command(ResolveIssueCommand, help="Resolve an issue")
-resolve_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
-resolve_issue_parser.add_argument('--state', dest='state', type=str, default="closed", choices = ["open", "closed"], help='State of issues to list (open or closed)')
-resolve_issue_parser.add_argument('--message', dest='resolve_message', type=str, default = None, help='Resolution message.')
 
 class AssignIssueCommand(Command):
     name = "assign"
+    options = [ ('message', { 'type' : str, 'default' : None, 'help' : 'Resolution message.' } ), ]
+    args = [ ('id', { 'type' : str, 'help' : "ID of issue."}),
+             ('user', { 'type': str, 'help' :"username."})
+             ]
 
     def run(self):
-        message = self.args.resolve_message
+        message = self.args.message
         if (message is None):
             message, exit_status = util.get_string_from_editor("Please resolve this issue.", prefix='idli-assign-')
         issue = self.backend.assign_issue(self.args.id, user=self.args.user, message = message)
@@ -155,9 +175,6 @@ class AssignIssueCommand(Command):
         util.print_issue(issue, comments)
 
 assign_issue_parser = __register_command(AssignIssueCommand, help="Assign issue to user.")
-assign_issue_parser.add_argument(dest='id', type=str, help="ID of issue.")
-assign_issue_parser.add_argument(dest='user', type=str, help="username.")
-assign_issue_parser.add_argument('--message', dest='resolve_message', type=str, default = None, help='Resolution message.')
 
 def run_command():
     parsed = main_parser.parse_args()

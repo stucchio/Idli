@@ -25,7 +25,7 @@ def catch_HTTPError(func):
             return func(self, *args, **kwargs)
         except urllib2.HTTPError, e:
             if (e.code == 401):
-                raise idli.IdliException("Authentication failed.\n\nCheck your idli configuration. The most likely cause is incorrect values for 'user' or 'token' variables in the [Github] section of the configuration files:\n    " + cfg.local_config_filename() + "\n    " + cfg.global_config_filename() + ".\n\nMake sure you check both files - the values in " + cfg.local_config_filename() + " will override the values in " + cfg.global_config_filename() + ".")
+                raise idli.IdliException("Authentication failed.\n\nCheck your idli configuration. The most likely cause is incorrect values for 'user' or 'token' variables in the [Github] section of the configuration files:\n    " + cfg.local_config_filename() + "\n    " + cfg.global_config_filename() + ".\n\nMake sure you check both files - the values in " + cfg.local_config_filename() + " will override the values in " + cfg.global_config_filename() + "." + "\n\n" + str(e))
             if (e.code == 404):
                 self.validate()
             raise e
@@ -120,7 +120,7 @@ class GithubBackend(idli.Backend):
     @catch_HTTPError
     def add_comment(self, issue_id, body):
         url = github_base_api_url + "issues/comment/" + self.repo_owner() + "/" + self.repo() + "/" + str(issue_id)
-        data = urllib.urlencode(self.__post_vars(False, comment=body))
+        data = urllib.urlencode(self.__post_vars(True, comment=body))
         request = urllib2.Request(url, data)
         comment = self.__parse_comment(None, json.loads(urllib2.urlopen(request).read())['comment'])
         return comment
