@@ -20,7 +20,6 @@ def get_string_from_editor(base_string, prefix='idli-'):
     tf = tempfile.NamedTemporaryFile('w+b',prefix=prefix)
     tf.write(base_string)
     tf.seek(0)
-    print get_editor_name_as_list()
     exit_status = subprocess.call(get_editor_name_as_list() + [tf.name])
     result = tf.read()
     return (result, exit_status)
