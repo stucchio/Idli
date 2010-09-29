@@ -22,6 +22,7 @@ Installation
 ============
 
 Standard python install::
+
     $ git clone git@github.com:stucchio/Idli.git
     $ cd Idli
     $ python setup.py build
@@ -34,6 +35,7 @@ Dependencies
 ~~~~~~~~~~~~
 
 Idli requires the following modules::
+
     argparse
     json
     urllib, urllib2
