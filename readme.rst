@@ -18,6 +18,8 @@ I (the author) prefer the command line::
 
 Currently idli allows you to talk to github and track backends.
 
+WARNING: THIS DOCUMENTATION IS INCOMPLETE
+
 Installation
 ============
 
@@ -32,7 +34,7 @@ Make sure you have the necessary dependencies installed. If you have
 python 2.7 or greater, you already have them.
 
 Dependencies
-~~~~~~~~~~~~
+------------
 
 Idli requires the following modules::
 
@@ -45,6 +47,7 @@ There is a good chance you already have these libraries.
 
 Usage
 =====
+
 Setting up an idli project
 --------------------------
 
@@ -173,7 +176,7 @@ Adding new backends
 -------------------
 
 New backends can be added to idli by subclassing idli.Backend. For example,
-the GithubBackend has the following general structure:
+the GithubBackend has the following general structure::
 
     class GithubBackend(idli.Backend):
         name = "github"
