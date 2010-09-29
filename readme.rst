@@ -1,18 +1,13 @@
 ====
 Idli
 ====
-----------------------------------------
-A command line interface to bug trackers
-----------------------------------------
+------------------------------------
+A command line bug tracker interface
+------------------------------------
 
 Introduction
 ============
 
-Documentation is incomplete...
-
-
-Motivation
-----------
 Idli is a command line interface to bug tracking tools. The goal is simple. To
 add a bug to a project, you can visit your bug tracker's website and use the web
 interface.
@@ -21,10 +16,30 @@ I (the author) prefer the command line::
 
     $ idli add --title "The frobnicator is broken." --body "The frobnicator does not frobnicate."
 
+Currently idli allows you to talk to github and track backends.
 
 Installation
 ============
 
+Standard python install::
+    $ git clone git@github.com:stucchio/Idli.git
+    $ cd Idli
+    $ python setup.py build
+    $ python setup.py install
+
+Make sure you have the necessary dependencies installed. If you have
+python 2.7 or greater, you already have them.
+
+Dependencies
+~~~~~~~~~~~~
+
+Idli requires the following modules::
+    argparse
+    json
+    urllib, urllib2
+
+Note that argparse comes installed with Python 2.7 or greater, and json with Python 2.6 or greater.
+There is a good chance you already have these libraries.
 
 Usage
 =====
