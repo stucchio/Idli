@@ -1,6 +1,24 @@
 from distutils.core import setup
 
 
+try:
+    import argparse
+except ImportError:
+    print "Module argparse is required by idl. Please install it and try again."
+
+try:
+    import json
+except ImportError:
+    print "Module json is required by idl. Please install it and try again."
+
+try:
+    import urllib
+    import urllib2
+except ImportError:
+    print "Modules urllib and urllib2 are required by idl. Please install them and try again."
+
+
+
 setup(name='idli',
       version='0.1',
       description='Bug tracker interface',
