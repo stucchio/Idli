@@ -116,8 +116,8 @@ class GithubBackend(idli.Backend):
         return (issue, comment_result)
 
     @catch_missing_config
-    @catch_url_error
     @catch_HTTPError
+    @catch_url_error
     def add_comment(self, issue_id, body):
         url = github_base_api_url + "issues/comment/" + self.repo_owner() + "/" + self.repo() + "/" + str(issue_id)
         data = urllib.urlencode(self.__post_vars(True, comment=body))

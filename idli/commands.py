@@ -14,7 +14,7 @@ class Command(object):
     parser = None
     name = None
     flags = {}
-    args = {}
+    required = {}
     options = {}
 
     def __init__(self, args, backend = None):
@@ -44,7 +44,7 @@ def __register_command(cmd, help):
     for name, args in cmd.options: # Configure options
         cmd_parser.add_argument('--'+name, dest=name, **args)
 
-    for (name, args) in cmd.args: # Configure arguments
+    for (name, args) in cmd.required: # Configure arguments
         cmd_parser.add_argument(dest=name, **args)
     commands[cmd.name] = cmd
     return cmd_parser
@@ -106,7 +106,7 @@ list_parser = __register_command(ListCommand, help="Print a list of issues")
 
 class ViewIssueCommand(Command):
     name = "show"
-    args = [('id', { 'type' : str, 'help' : 'issue ID' }), ]
+    required = [('id', { 'type' : str, 'help' : 'issue ID' }), ]
 
     def run(self):
         issue, comments = self.backend.get_issue(self.args.id)
@@ -138,17 +138,41 @@ class AddIssueCommand(Command):
 
 add_issue_parser = __register_command(AddIssueCommand, help="Display an issue")
 
+class AddCommentCommand(Command):
+    name = "comment"
+    required = [('id', { 'type' : str, 'help' : 'issue ID' }), ]
+    options = [ ('body', { 'type' : str, 'default' : None, 'help' : 'Body of issue.' } ),
+                ]
+
+    def run(self):
+        issue = self.backend.get_issue(self.args.id) # Will raise error message if issue cannot be found
+        message = self.args.body
+        if (message is None):
+            message, exit_status = util.get_string_from_editor("# Type your comment here.", prefix='idli-comment-')
+            if (exit_status != 0):
+                raise idli.IdliException("Operation cancelled.")
+        self.backend.add_comment(self.args.id, message)
+        print "Comment added!"
+        print
+        issue, comments = self.backend.get_issue(self.args.id)
+        util.print_issue(issue, comments)
+
+add_comment_parser = __register_command(AddCommentCommand, help="Comment on an issue")
+
 class ResolveIssueCommand(Command):
     name = "resolve"
     options = [ ('state', { 'type':str, 'default': "closed", 'choices' : ["open", "closed"], 'help':'State of issues to list (open or closed)' } ),
                 ('message', { 'type' : str, 'default' : None, 'help':'Resolution message.' } ),
                 ]
-    args = [ ('id', { 'type' :str, 'help' : "ID of issue." } ), ]
+    required = [ ('id', { 'type' :str, 'help' : "ID of issue." } ), ]
 
     def run(self):
         message = self.args.message
+        message = self.args.message
         if (message is None):
             message, exit_status = util.get_string_from_editor("Issue resolved.\n# More details go here.", prefix='idli-resolve-')
+        if (exit_status != 0):
+            raise idli.IdliException("Operation cancelled.")
         issue = self.backend.resolve_issue(self.args.id, status = self.args.state, message = message)
         issue, comments = self.backend.get_issue(self.args.id)
         print "Issue state changed to " + str(self.args.state)
@@ -160,14 +184,16 @@ resolve_issue_parser = __register_command(ResolveIssueCommand, help="Resolve an 
 class AssignIssueCommand(Command):
     name = "assign"
     options = [ ('message', { 'type' : str, 'default' : None, 'help' : 'Resolution message.' } ), ]
-    args = [ ('id', { 'type' : str, 'help' : "ID of issue."}),
-             ('user', { 'type': str, 'help' :"username."})
-             ]
+    required = [ ('id', { 'type' : str, 'help' : "ID of issue."}),
+                 ('user', { 'type': str, 'help' :"username."})
+                 ]
 
     def run(self):
         message = self.args.message
         if (message is None):
             message, exit_status = util.get_string_from_editor("Please resolve this issue.", prefix='idli-assign-')
+        if (exit_status != 0):
+            raise idli.IdliException("Operation cancelled.")
         issue = self.backend.assign_issue(self.args.id, user=self.args.user, message = message)
         issue, comments = self.backend.get_issue(self.args.id)
         print "Issue " + self.args.id + " assigned to " + str(self.args.user)
