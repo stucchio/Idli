@@ -62,7 +62,7 @@ class Backend(object):
     def add_issue(self, title, body):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
-    def issue_list(self, state=True):
+    def issue_list(self, state=True, mine=None):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def get_issue(self, issue_id):

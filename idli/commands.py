@@ -71,8 +71,10 @@ init_subparser = init_parser.add_subparsers(dest="backend_name")
 class ListCommand(Command):
     name = "list"
     options = [ ('state', { 'type' : str, 'default' : "open", 'choices' : ["open", "closed"], 'help' : 'State of issues to list (open or closed)' } ),
-                ('limit', { 'type' : int, 'default' : None, 'help' : "Number of issues to list" } )
+                ('limit', { 'type' : int, 'default' : None, 'help' : "Number of issues to list" } ),
                 ]
+    flags = [ ("mine", 'Display only issues for which I am the owner.'),
+              ]
 
     date_format = "%Y/%m/%d"
 
@@ -102,7 +104,7 @@ class ListCommand(Command):
 
     def print_issue_list(self, state=True, limit=None):
         """Print list of issues to stdout."""
-        issues = self.backend.issue_list(state)
+        issues = self.backend.issue_list(state, self.args.mine)
         print self.__format_issue_line("ID", "date", "title", "creator", "owner", "# comments", True)
         if (limit is None):
             limit = len(issues)

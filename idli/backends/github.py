@@ -86,7 +86,9 @@ class GithubBackend(idli.Backend):
 
     @catch_url_error
     @catch_HTTPError
-    def issue_list(self, state=True):
+    def issue_list(self, state=True, mine=None):
+        if mine:
+            raise idli.IdliException("Github does not support ownership/assignment of issues.")
         url = github_base_api_url + "issues/list/" + self.repo_owner() + "/" + self.repo() + "/" + self.__state_to_gh_state(state)
         json_result = urllib2.urlopen(url).read()
         issue_as_json = json.loads(json_result)
