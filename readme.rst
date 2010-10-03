@@ -77,18 +77,65 @@ Using
 To add a bug::
 
     $ idli add --title "title of bug" --body "body of bug."
+    Issue added!
 
-To list existing bugs::
+    ID: 33
+    Title: title of bug
+    Creator: stucchio
+    Create time: 2010-10-03 14:35:28
+    Open: True
 
-    $ idli list
-    ID:date              title                      creator                    # comments
-    11:<2010/09/21 03:26>  Frobnicator broken         stucchio                   0
-    12:<2010/09/21 03:27>  Widgets full of beer       stucchio                   0
-    13:<2010/09/21 03:27>  Documentation confusing    stucchio                   0
+    body of bug.
+
 
 If the title and body are unspecified, idli will open an editor for you to type them.
 The specific editor used can be configured via the EDITOR environment variable (note that
 git uses the same variable).
+
+To tag a bug::
+
+    $ ./scripts/idli tag 33 demo
+    ID: 33
+    Title: title of bug
+    Creator: stucchio
+    Create time: 2010-10-03 14:35:28
+    Open: True
+    Tags: demo
+
+    body of bug.
+
+Bugs can also be tagged when created with `idli add --tags=foo,bar` - the resulting issue will have both the tags `foo` and `bar`.
+
+To list existing bugs::
+
+    $ idli list
+    ID     date        title                                creator       owner       # comments
+    11     2010/10/02  warp drive is broken                 kirk                      0
+    31     2010/10/03  frobnicator is broken                stucchio      stucchio    0
+    32     2010/10/03  beer in the widgets                  stucchio      homer       3
+    35     2010/10/03  beer in the frobnicator              stucchio      homer       4
+    38     2010/10/03  title of bug                         stucchio                  0
+
+To assign a bug::
+
+    $ idli assign 11 scotty --message "I need warp drive now."
+
+To comment on an issue::
+
+    $ idli comment 11 --body "Keptin, I canna change the laws of physics!"
+
+To list issues owned by you (not supported by all backends)::
+
+    $ idli list --mine
+    ID     date        title                                creator       owner       # comments
+    31     2010/10/03  frobnicator is broken                stucchio      stucchio    0
+
+To list issues with a given tag::
+
+    $ idli list --tag=beer
+    ID     date        title                                creator       owner       # comments
+    32     2010/10/03  beer in the widgets                  stucchio      homer       3
+    35     2010/10/03  beer in the frobnicator              stucchio      homer       4
 
 To view a bug in more detail::
 
@@ -98,16 +145,13 @@ To view a bug in more detail::
     Creator: stucchio
     Create time: 2010-09-21 03:26:57
     Open: True
+    Tags: frobnicator
 
     So very broken.
 
 To resolve a bug::
 
     $ idli resolve 11 --message "Issue resolved by fixing the frobnicator."
-
-To assign a bug::
-
-    $ idli assign 11 scotty "I need warp drive now."
 
 Backends vary
 ~~~~~~~~~~~~~
