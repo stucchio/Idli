@@ -58,6 +58,10 @@ class TracBackend(idli.Backend):
         return issues
 
     @catch_socket_errors
+    def add_comment(self, issue_id, body):
+        print self.ticket_api().update(int(issue_id), body, {})
+
+    @catch_socket_errors
     def get_issue(self, issue_id):
         return (self.__convert_issue(self.ticket_api().get(int(issue_id))), [])
 
