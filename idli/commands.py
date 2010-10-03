@@ -70,8 +70,9 @@ init_subparser = init_parser.add_subparsers(dest="backend_name")
 
 class ListCommand(Command):
     name = "list"
-    options = [ ('state', { 'type' : str, 'default' : "open", 'choices' : ["open", "closed"], 'help' : 'State of issues to list (open or closed)' } ),
+    options = [ ('state', { 'type' : str, 'default' : "open", 'choices' : ["open", "closed"], 'help' : 'State of issues to list (open or closed). Defaults to open if unspecified.' } ),
                 ('limit', { 'type' : int, 'default' : None, 'help' : "Number of issues to list" } ),
+                ('tag', { 'type' : str, 'default' : None, 'help' : "Tag to search for" } ),
                 ]
     flags = [ ("mine", 'Display only issues for which I am the owner.'),
               ]
@@ -79,8 +80,13 @@ class ListCommand(Command):
     date_format = "%Y/%m/%d"
 
     def run(self):
-        limit = self.args.limit
-        self.print_issue_list(self.__state(), limit)
+        filtered = self.args.mine or self.args.tag
+        issues = []
+        if filtered:
+            issues = self.backend.filtered_issue_list(self.args.state, self.args.mine, self.args.tag)
+        else:
+            issues = self.backend.issue_list(self.args.state)
+        self.print_issue_list(issues, self.args.limit)
 
     def __truncate_ljust_string(self, s, l, no_truncate=False):
         s = str(s)
@@ -102,9 +108,8 @@ class ListCommand(Command):
         if (self.args.state == "closed"):
             return False
 
-    def print_issue_list(self, state=True, limit=None):
+    def print_issue_list(self, issues, limit=None):
         """Print list of issues to stdout."""
-        issues = self.backend.issue_list(state, self.args.mine)
         print self.__format_issue_line("ID", "date", "title", "creator", "owner", "# comments", True)
         if (limit is None):
             limit = len(issues)

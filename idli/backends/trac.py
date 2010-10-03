@@ -54,12 +54,12 @@ class TracBackend(idli.Backend):
             multicall.ticket.get(ticket)
         issues = [self.__convert_issue(t) for t in multicall()]
         if mine:
-            issues = [i for i in issues if i.owner == self.user()]
+            issues = [i for i in issues if i.owner == self.username()]
         return issues
 
     @catch_socket_errors
     def add_comment(self, issue_id, body):
-        print self.ticket_api().update(int(issue_id), body, {})
+        self.ticket_api().update(int(issue_id), body, {})
 
     @catch_socket_errors
     def get_issue(self, issue_id):
@@ -70,16 +70,15 @@ class TracBackend(idli.Backend):
     @catch_socket_errors
     def resolve_issue(self, issue_id, status = "closed", message = None):
         actions = self.ticket_api().getActions(issue_id)
-        print actions
         if ('resolve' in [a[0] for a in actions]):
             ticket = self.ticket_api().update(int(issue_id), message, { 'status' : 'fixed', 'action' : 'resolve'})
             return self.__convert_issue(ticket)
         raise idli.IdliException("Can not resolve issue " + issue_id + ". Perhaps it is already resolved?")
 
     @catch_socket_errors
-    def add_issue(self, title, body):
+    def add_issue(self, title, body, tags=[]):
         ticket_id = self.ticket_api().create(title, body)
-        return self.__convert_issue(self.ticket_api().get(ticket_id))
+        return ( self.__convert_issue(self.ticket_api().get(ticket_id)), [] )
 
     @catch_socket_errors
     def assign_issue(self, issue_id, user, message):
@@ -104,7 +103,7 @@ class TracBackend(idli.Backend):
     def server(self):
         return self.get_config("server")
 
-    def user(self):
+    def username(self):
         return self.get_config("user")
 
     def password(self):

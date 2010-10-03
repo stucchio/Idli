@@ -68,7 +68,7 @@ class GithubBackend(idli.Backend):
     def repo_owner(self):
         return self.__repo_owner or self.get_config("owner")
 
-    def user(self):
+    def username(self):
         return self.__user or self.get_config("user")
 
     def token(self):
@@ -101,9 +101,7 @@ class GithubBackend(idli.Backend):
 
     @catch_url_error
     @catch_HTTPError
-    def issue_list(self, state=True, mine=None):
-        if mine:
-            raise idli.IdliException("Github does not support ownership/assignment of issues.")
+    def issue_list(self, state=True):
         url = github_base_api_url + "issues/list/" + self.repo_owner() + "/" + self.repo() + "/" + self.__state_to_gh_state(state)
         json_result = urllib2.urlopen(url).read()
         issue_as_json = json.loads(json_result)
@@ -191,7 +189,7 @@ class GithubBackend(idli.Backend):
 
     def __post_vars(self, with_login=False, **kwargs):
         if (with_login):
-            kwargs["login"] = self.user()
+            kwargs["login"] = self.username()
             kwargs["token"] = self.token()
         return kwargs
 

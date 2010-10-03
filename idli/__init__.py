@@ -67,8 +67,16 @@ class Backend(object):
     def tag_issue(self, issue_id, add_tags, remove_tags=[]):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
-    def issue_list(self, state=True, mine=None):
+    def issue_list(self, state=True):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
+    def filtered_issue_list(self, state=True, mine=False, tag=None):
+        issues = self.issue_list(state)
+        if mine:
+            issues = [i for i in issues if i.owner == self.username()]
+        if tag:
+            issues = [i for i in issues if tag in i.tags]
+        return issues
 
     def get_issue(self, issue_id):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
@@ -80,6 +88,9 @@ class Backend(object):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def assign_issue(self, issue_id, user, message):
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
+    def username(self):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     #Utilities
