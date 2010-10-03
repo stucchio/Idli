@@ -80,12 +80,19 @@ class ListCommand(Command):
         limit = self.args.limit
         self.print_issue_list(self.__state(), limit)
 
-    def __format_issue_line(self, id, date, title, creator, num_comments):
+    def __truncate_ljust_string(self, s, l, no_truncate=False):
+        s = str(s)
+        if len(s) <= l or no_truncate:
+            return s.ljust(l)
+        else:
+            return s[0:l-3]+"..."
+
+    def __format_issue_line(self, id, date, title, creator, num_comments, is_title_line=False):
         if date.__class__ == str:
             date_str = date
         else:
             date_str = date.strftime(self.date_format)
-        return id.rjust(4) + ":" + date_str.ljust(16) + "  " + title.ljust(25) + "  " + creator.ljust(25) + "  " + str(num_comments).ljust(5)
+        return id.ljust(6) + " " + self.__truncate_ljust_string(date_str,20) + "  " + self.__truncate_ljust_string(title, 35) + "  " + self.__truncate_ljust_string(creator,16) + "  " + self.__truncate_ljust_string(num_comments, 5, is_title_line)
 
     def __state(self):
         if (self.args.state == "open"):
@@ -96,7 +103,7 @@ class ListCommand(Command):
     def print_issue_list(self, state=True, limit=None):
         """Print list of issues to stdout."""
         issues = self.backend.issue_list(state)
-        print self.__format_issue_line("ID", "date", "title", "creator", "# comments")
+        print self.__format_issue_line("ID", "date", "title", "creator", "# comments", True)
         if (limit is None):
             limit = len(issues)
         for i in issues[0:limit]:
