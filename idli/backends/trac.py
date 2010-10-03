@@ -43,7 +43,7 @@ class TracBackend(idli.Backend):
         self.__connection = None
 
     @catch_socket_errors
-    def issue_list(self, state=True):
+    def issue_list(self, state=True, mine=None):
         ticket_id_list = []
         if (state):
             ticket_id_list = self.ticket_api().query("status!=closed")
@@ -52,7 +52,10 @@ class TracBackend(idli.Backend):
         multicall = xmlrpclib.MultiCall(self.connection()) # We try to get actual tickets in one http request
         for ticket in ticket_id_list:
             multicall.ticket.get(ticket)
-        return [self.__convert_issue(t) for t in multicall()]
+        issues = [self.__convert_issue(t) for t in multicall()]
+        if mine:
+            issues = [i for i in issues if i.owner == self.user()]
+        return issues
 
     @catch_socket_errors
     def get_issue(self, issue_id):

@@ -42,7 +42,7 @@ class Backend(object):
         section_name = self.config_section or self.name
         print "Initializing " + self.name + " project."
         import idli.config as cfg
-        for name in self.init_names:
+        for (name, help) in self.init_names:
             cfg.set_config_value(section_name, name, self.args.__dict__[name], global_val=False)
         cfg.set_config_value("project", "type", self.name, global_val=False)
         print "Wrote configuration to " + cfg.local_config_filename()

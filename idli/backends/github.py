@@ -44,11 +44,11 @@ CONFIG_SECTION = "Github"
 class GithubBackend(idli.Backend):
     name = "github"
     config_section = "Github"
-    init_names = { "repo" : "Name of repository",
-                   "owner" : "Owner of repository (github username).",
-                   }
+    init_names = [ ("repo", "Name of repository"),
+                   ("owner", "Owner of repository (github username).")
+                   ]
     config_names = [ ("user", "Github username"),
-                     ("token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token.")
+                     ("token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token."),
                      ]
 
     def __init__(self, args, repo=None, auth = None):
