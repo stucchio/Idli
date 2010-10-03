@@ -37,6 +37,8 @@ def print_issue(issue, comments):
     print "Open: " + str(issue.status)
     if not (issue.owner is None):
         print "Owner: " + str(issue.owner)
+    if (issue.tags):
+        print "Tags: " + ", ".join(issue.tags)
     print
     print issue.body
     print

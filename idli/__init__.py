@@ -27,12 +27,13 @@ class Issue(object):
         return "Issue(" + self.hashcode + ", " + self.title + ", " + self.creator + ", " + str(self.status) + ")"
 
 class IssueComment(object):
-    def __init__(self, issue, creator, title, body, date=None):
+    def __init__(self, issue, creator, title, body, date=None, tags=[]):
         self.issue = issue
         self.creator = creator
         self.title = title
         self.body = body
         self.date = date
+        self.tags = tags
 
 class Backend(object):
     def __init__(self):
@@ -59,7 +60,10 @@ class Backend(object):
         else:
             print "Added local configuration to " + cfg.global_config_filename()
 
-    def add_issue(self, title, body):
+    def add_issue(self, title, body, tags=[]):
+        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+
+    def tag_issue(self, add_tags, remove_tags):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def issue_list(self, state=True, mine=None):
