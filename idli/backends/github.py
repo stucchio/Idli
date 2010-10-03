@@ -85,7 +85,7 @@ class GithubBackend(idli.Backend):
         if tags:
             self.tag_issue(issue.id, tags)
             issue = self.get_issue(issue.id)
-        return issue
+        return (issue, [])
 
     @catch_missing_config
     @catch_url_error
