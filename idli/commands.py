@@ -74,7 +74,7 @@ class ListCommand(Command):
                 ('limit', { 'type' : int, 'default' : None, 'help' : "Number of issues to list" } )
                 ]
 
-    date_format = "<%Y/%m/%d %H:%M>"
+    date_format = "%Y/%m/%d"
 
     def run(self):
         limit = self.args.limit
@@ -87,12 +87,12 @@ class ListCommand(Command):
         else:
             return s[0:l-3]+"..."
 
-    def __format_issue_line(self, id, date, title, creator, num_comments, is_title_line=False):
+    def __format_issue_line(self, id, date, title, creator, owner, num_comments, is_title_line=False):
         if date.__class__ == str:
             date_str = date
         else:
             date_str = date.strftime(self.date_format)
-        return id.ljust(6) + " " + self.__truncate_ljust_string(date_str,20) + "  " + self.__truncate_ljust_string(title, 35) + "  " + self.__truncate_ljust_string(creator,16) + "  " + self.__truncate_ljust_string(num_comments, 5, is_title_line)
+        return id.ljust(6) + " " + self.__truncate_ljust_string(date_str,10) + "  " + self.__truncate_ljust_string(title, 35) + "  " + self.__truncate_ljust_string(creator,12) + "  " + self.__truncate_ljust_string(owner, 12) + self.__truncate_ljust_string(num_comments, 5, is_title_line)
 
     def __state(self):
         if (self.args.state == "open"):
@@ -103,11 +103,11 @@ class ListCommand(Command):
     def print_issue_list(self, state=True, limit=None):
         """Print list of issues to stdout."""
         issues = self.backend.issue_list(state)
-        print self.__format_issue_line("ID", "date", "title", "creator", "# comments", True)
+        print self.__format_issue_line("ID", "date", "title", "creator", "owner", "# comments", True)
         if (limit is None):
             limit = len(issues)
         for i in issues[0:limit]:
-            print self.__format_issue_line(i.hashcode, i.create_time, i.title, i.creator, i.num_comments)
+            print self.__format_issue_line(i.hashcode, i.create_time, i.title, i.creator, i.owner or "", i.num_comments)
 
 list_parser = __register_command(ListCommand, help="Print a list of issues")
 
