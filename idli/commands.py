@@ -192,6 +192,32 @@ class ResolveIssueCommand(Command):
 
 resolve_issue_parser = __register_command(ResolveIssueCommand, help="Resolve an issue")
 
+class TagIssueCommand(Command):
+    name = "tag"
+    required = [ ('id', { 'type' : str, 'help' : "ID of issue." } ),
+                 ('tags', { 'type' : str, 'help' : 'List of tags for issue. A string, with tags separated by commas. E.g., "widgets,frobnicator"' }),
+                 ]
+    flags = [ ("remove", 'If this flag is set, the tags will be removed instead of added.'),
+              ]
+
+    def run(self):
+        issue, comments = self.backend.get_issue(self.args.id) # This will raise an error if the issue does not exist.
+        tags = [t for t in (self.args.tags).split(",") if t] # Remove empty tags
+
+        if self.args.remove: #If user asked to remove nonexistent tag, raise an error.
+            for t in tags:
+                if not (t in issue.tags):
+                    raise idli.IdliException("The issue " + str(self.args.id) + " does not have the tag " + t + ". No action performed. Tags available: " + ", ".join(issue.tags))
+                tags = [t for t in tags if not (t in issue.tags)]
+
+        #Now actually tag the issue.
+        self.backend.tag_issue(self.args.id, tags, self.args.remove)
+        issue,comments = self.backend.get_issue(self.args.id)
+        util.print_issue(issue, comments)
+
+tag_issue_parser = __register_command(TagIssueCommand, help="Tag an issue")
+
+
 class AssignIssueCommand(Command):
     name = "assign"
     options = [ ('message', { 'type' : str, 'default' : None, 'help' : 'Resolution message.' } ), ]

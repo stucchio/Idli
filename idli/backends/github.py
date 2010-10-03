@@ -90,19 +90,13 @@ class GithubBackend(idli.Backend):
     @catch_missing_config
     @catch_url_error
     @catch_HTTPError
-    def tag_issue(self, issue_id, add_tags, remove_tags=[]):
-        for t in add_tags:
-            url = self.__add_label_url(issue_id, t)
+    def tag_issue(self, issue_id, tags, remove_tags=False):
+        for t in tags:
+            url = self.__add_label_url(issue_id, t, remove_tags)
             request = urllib2.Request(url, urllib.urlencode(self.__post_vars(True)))
             result = json.loads(urllib2.urlopen(request).read())
-            if (not (t in result['labels'])):
+            if (not (t in result['labels'])) and (not remove_tags):
                 raise idli.IdliException("Failed to add tag to issue " + str(issue_id) + ". The issue list may be in an inconsistent state.")
-        for t in remove_tags:
-            url = self.__add_label_url(issue_id, t, True)
-            request = urllib2.Request(url, urllib.urlencode(self.__post_vars(True)))
-            result = json.loads(urllib2.urlopen(request).read())
-            if (t in result['labels']):
-                raise idli.IdliException("Failed to remove tag from issue " + str(issue_id) + ". The issue list may be in an inconsistent state.")
         return self.get_issue(issue_id)
 
     @catch_url_error
@@ -119,7 +113,7 @@ class GithubBackend(idli.Backend):
         return result
 
     @catch_url_error
-    def get_issue(self, issue_id):
+    def get_issue(self, issue_id, get_comments=True):
         issue_url = github_base_api_url + "issues/show/" + self.repo_owner() + "/" + self.repo() + "/" + issue_id
         comment_url = github_base_api_url + "issues/comments/" + self.repo_owner() + "/" + self.repo() + "/" + issue_id
         try:
