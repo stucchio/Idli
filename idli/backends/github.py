@@ -77,12 +77,33 @@ class GithubBackend(idli.Backend):
     @catch_missing_config
     @catch_url_error
     @catch_HTTPError
-    def add_issue(self, title, body):
+    def add_issue(self, title, body, tags=[]):
         url = github_base_api_url + "issues/open/" + self.repo_owner() + "/" + self.repo()
         data = urllib.urlencode(self.__post_vars(True, title=title, body=body))
         request = urllib2.Request(url, data)
         issue = self.__parse_issue(json.loads(urllib2.urlopen(request).read())["issue"])
+        if tags:
+            self.tag_issue(issue.id, tags)
+            issue = self.get_issue(issue.id)
         return issue
+
+    @catch_missing_config
+    @catch_url_error
+    @catch_HTTPError
+    def tag_issue(self, issue_id, add_tags, remove_tags=[]):
+        for t in add_tags:
+            url = self.__add_label_url(issue_id, t)
+            request = urllib2.Request(url, urllib.urlencode(self.__post_vars(True)))
+            result = json.loads(urllib2.urlopen(request).read())
+            if (not (t in result['labels'])):
+                raise idli.IdliException("Failed to add tag to issue " + str(issue_id) + ". The issue list may be in an inconsistent state.")
+        for t in remove_tags:
+            url = self.__add_label_url(issue_id, t, True)
+            request = urllib2.Request(url, urllib.urlencode(self.__post_vars(True)))
+            result = json.loads(urllib2.urlopen(request).read())
+            if (t in result['labels']):
+                raise idli.IdliException("Failed to remove tag from issue " + str(issue_id) + ". The issue list may be in an inconsistent state.")
+        return self.get_issue(issue_id)
 
     @catch_url_error
     @catch_HTTPError
@@ -172,7 +193,7 @@ class GithubBackend(idli.Backend):
         return idli.Issue(issue_dict["title"], issue_dict["body"],
                             issue_dict["number"], issue_dict["user"],
                             num_comments = issue_dict["comments"], status = issue_dict["state"],
-                            create_time=create_time)
+                            create_time=create_time, tags=issue_dict["labels"])
 
     def __post_vars(self, with_login=False, **kwargs):
         if (with_login):
@@ -185,6 +206,15 @@ class GithubBackend(idli.Backend):
             return "open"
         else:
             return "closed"
+
+    def __add_label_url(self, issue_id, tag, remove=False):
+        url = github_base_api_url + "issues/label"
+        if (remove):
+            url += "/remove"
+        else:
+            url += "/add"
+        url += "/" + self.repo_owner() + "/" + self.repo() + "/" + tag + "/" + str(issue_id)
+        return url
 
     def __parse_date(self, datestr):
         return datetime.datetime.strptime(datestr[0:19], dateformat)

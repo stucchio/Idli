@@ -109,7 +109,7 @@ class ListCommand(Command):
         if (limit is None):
             limit = len(issues)
         for i in issues[0:limit]:
-            print self.__format_issue_line(i.hashcode, i.create_time, i.title, i.creator, i.owner or "", i.num_comments)
+            print self.__format_issue_line(i.id, i.create_time, i.title, i.creator, i.owner or "", i.num_comments)
 
 list_parser = __register_command(ListCommand, help="Print a list of issues")
 
@@ -136,7 +136,7 @@ class AddIssueCommand(Command):
         issue = self.backend.add_issue(title, body, tags=tags)
         print "Issue added!"
         print
-        util.print_issue(issue, [])
+        util.print_issue(issue[0], issue[1])
 
     def get_title_body(self):
         title = self.args.title or ""

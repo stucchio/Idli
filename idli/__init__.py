@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
 class Issue(object):
-    def __init__(self, title, body, hashcode, creator, status = True, num_comments = None, create_time=None, last_modified=None, owner=None, tags=[]):
+    def __init__(self, title, body, id, creator, status = True, num_comments = None, create_time=None, last_modified=None, owner=None, tags=[]):
         self.title = title
         self.body = body
-        self.hashcode = str(hashcode)
+        self.id = str(id)
         self.creator = creator
         self.num_comments = int(num_comments or 0)
         self.status = self.__parse_status(status)
@@ -25,7 +25,7 @@ class Issue(object):
                         "false" : False
                         }
     def __str__(self):
-        return "Issue(" + self.hashcode + ", " + self.title + ", " + self.creator + ", " + str(self.status) + ")"
+        return "Issue(" + self.id + ", " + self.title + ", " + self.creator + ", " + str(self.status) + ")"
 
 class IssueComment(object):
     def __init__(self, issue, creator, title, body, date=None, tags=[]):
@@ -64,7 +64,7 @@ class Backend(object):
     def add_issue(self, title, body, tags=[]):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
-    def tag_issue(self, add_tags, remove_tags):
+    def tag_issue(self, issue_id, add_tags, remove_tags=[]):
         raise IdliNotImplementedException("That functionality is not implemented by this backend.")
 
     def issue_list(self, state=True, mine=None):

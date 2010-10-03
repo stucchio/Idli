@@ -30,7 +30,7 @@ def static_method(meth):
     return smeth
 
 def print_issue(issue, comments):
-    print "ID: " + issue.hashcode
+    print "ID: " + issue.id
     print "Title: " + issue.title
     print "Creator: " + issue.creator
     print "Create time: " + str(issue.create_time)
