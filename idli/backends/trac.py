@@ -63,7 +63,9 @@ class TracBackend(idli.Backend):
 
     @catch_socket_errors
     def get_issue(self, issue_id):
-        return (self.__convert_issue(self.ticket_api().get(int(issue_id))), [])
+        issue = self.__convert_issue(self.ticket_api().get(int(issue_id)))
+        comments = [ self.__convert_comment(c, issue) for c in self.ticket_api().changeLog(int(issue_id)) if c[2] == 'comment']
+        return (issue, comments)
 
     @catch_socket_errors
     def resolve_issue(self, issue_id, status = "closed", message = None):
@@ -107,6 +109,9 @@ class TracBackend(idli.Backend):
 
     def password(self):
         return self.get_config("password")
+
+    def __convert_comment(self, c, issue):
+        return idli.IssueComment(issue, str(c[1]), "", str(c[4]), date=c[0])
 
     def __convert_issue(self, t):
         issue_id = t[0]
