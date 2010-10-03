@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 class Issue(object):
-    def __init__(self, title, body, hashcode, creator, status = True, num_comments = None, create_time=None, last_modified=None, owner=None):
+    def __init__(self, title, body, hashcode, creator, status = True, num_comments = None, create_time=None, last_modified=None, owner=None, tags=[]):
         self.title = title
         self.body = body
         self.hashcode = str(hashcode)
@@ -11,6 +11,7 @@ class Issue(object):
         self.create_time = create_time
         self.last_modified = last_modified
         self.owner = owner
+        self.tags = tags
 
     def __parse_status(self, status):
         if (status.__class__ == bool):

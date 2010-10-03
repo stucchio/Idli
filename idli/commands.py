@@ -126,12 +126,14 @@ view_issue_parser = __register_command(ViewIssueCommand, help="Display an issue"
 class AddIssueCommand(Command):
     name = "add"
     options = [ ('title', { 'type' : str, 'default' : None, 'help' : 'Title of issue.' } ),
-                ('body', { 'type' : str, 'default' : None, 'help' : 'Body of issue.' } )
+                ('body', { 'type' : str, 'default' : None, 'help' : 'Body of issue.' } ),
+                ('tags', { 'type' : str, 'default' : '', 'help' : 'List of tags for issue. A string, with tags separated by commas. E.g., "--tags=widgets,frobnicator"' }),
                 ]
 
     def run(self):
         title, body = self.get_title_body()
-        issue = self.backend.add_issue(title, body)
+        tags = [t for t in self.args.tags.split(",") if t] # Filter out any empty strings
+        issue = self.backend.add_issue(title, body, tags=tags)
         print "Issue added!"
         print
         util.print_issue(issue, [])
