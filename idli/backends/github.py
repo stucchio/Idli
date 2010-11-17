@@ -92,8 +92,7 @@ class GithubBackend(idli.Backend):
     def tag_issue(self, issue_id, tags, remove_tags=False):
         for t in tags:
             url = self.__add_label_url(issue_id, t, remove_tags)
-            request = urllib2.Request(url, urllib.urlencode(self.__post_vars(True)))
-            result = json.loads(urllib2.urlopen(request).read())
+            result = json.loads(self.__url_request(url))
             if (not (t in result['labels'])) and (not remove_tags):
                 raise idli.IdliException("Failed to add tag to issue " + str(issue_id) + ". The issue list may be in an inconsistent state.")
         return self.get_issue(issue_id)
@@ -114,8 +113,8 @@ class GithubBackend(idli.Backend):
         issue_url = github_base_api_url + "issues/show/" + self.repo_owner() + "/" + self.repo() + "/" + issue_id
         comment_url = github_base_api_url + "issues/comments/" + self.repo_owner() + "/" + self.repo() + "/" + issue_id
         try:
-            issue_as_json = json.loads(urllib2.urlopen(issue_url).read())
-            comments_as_json = json.loads(urllib2.urlopen(comment_url).read())
+            issue_as_json = json.loads(self.__url_request(issue_url))
+            comments_as_json = json.loads(self.__url_request(comment_url))
         except urllib2.HTTPError, e:
             self.validate()
             raise idli.IdliException("Could not find issue with id '" + issue_id + "'")
@@ -134,9 +133,8 @@ class GithubBackend(idli.Backend):
     @catch_url_error
     def add_comment(self, issue_id, body):
         url = github_base_api_url + "issues/comment/" + self.repo_owner() + "/" + self.repo() + "/" + str(issue_id)
-        data = urllib.urlencode(self.__post_vars(True, comment=body))
-        request = urllib2.Request(url, data)
-        comment = self.__parse_comment(None, json.loads(urllib2.urlopen(request).read())['comment'])
+        result_str = self.__url_request(url, comment=body)
+        comment = self.__parse_comment(None, json.loads(result_str)['comment'])
         return comment
 
     @catch_missing_config
@@ -146,9 +144,7 @@ class GithubBackend(idli.Backend):
         self.add_comment(issue_id, message)
         status_url = self.__resolution_code_to_url[status]
         url = github_base_api_url + "issues/" + status_url + "/" + self.repo_owner() + "/" + self.repo() + "/" + str(issue_id)
-        data = urllib.urlencode(self.__post_vars(True))
-        request = urllib2.Request(url, data)
-        issue = self.__parse_issue(json.loads(urllib2.urlopen(request).read())["issue"])
+        issue = self.__parse_issue(json.loads(self.__url_request(url))["issue"])
         return issue
     __resolution_code_to_url = { "closed" : "close", "open" : "reopen" }
 
