@@ -79,9 +79,8 @@ class GithubBackend(idli.Backend):
     @catch_HTTPError
     def add_issue(self, title, body, tags=[]):
         url = github_base_api_url + "issues/open/" + self.repo_owner() + "/" + self.repo()
-        data = urllib.urlencode(self.__post_vars(True, title=title, body=body))
-        request = urllib2.Request(url, data)
-        issue = self.__parse_issue(json.loads(urllib2.urlopen(request).read())["issue"])
+        result = self.__url_request(url, title=title, body=body)
+        issue = self.__parse_issue(json.loads(result)["issue"])
         if tags:
             self.tag_issue(issue.id, tags)
             issue = self.get_issue(issue.id)
@@ -103,8 +102,8 @@ class GithubBackend(idli.Backend):
     @catch_HTTPError
     def issue_list(self, state=True):
         url = github_base_api_url + "issues/list/" + self.repo_owner() + "/" + self.repo() + "/" + self.__state_to_gh_state(state)
-        json_result = urllib2.urlopen(url).read()
-        issue_as_json = json.loads(json_result)
+        result = self.__url_request(url)
+        issue_as_json = json.loads(result)
         result = []
         for i in issue_as_json["issues"]:
             result.append(self.__parse_issue(i))
@@ -177,6 +176,11 @@ class GithubBackend(idli.Backend):
             raise idli.IdliException("Can not find repository " + self.repo() + " on github.")
 
     #Utilities
+    def __url_request(self, url, **kwargs):
+        data = urllib.urlencode(self.__post_vars(True, **kwargs))
+        request = urllib2.Request(url, data)
+        return urllib2.urlopen(request).read()
+
     def __parse_comment(self, issue, cdict):
         return idli.IssueComment(issue, cdict["user"], "", cdict["body"], self.__parse_date(cdict["created_at"]))
 
