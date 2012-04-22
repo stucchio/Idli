@@ -4,6 +4,7 @@ import urllib
 import urllib2
 import json
 import datetime
+import requests
 
 import idli
 import idli.config as cfg
@@ -25,7 +26,7 @@ def catch_HTTPError(func):
             return func(self, *args, **kwargs)
         except urllib2.HTTPError, e:
             if (e.code == 401):
-                raise idli.IdliException("Authentication failed.\n\nCheck your idli configuration. The most likely cause is incorrect values for 'user' or 'token' variables in the [Github] section of the configuration files:\n    " + cfg.local_config_filename() + "\n    " + cfg.global_config_filename() + ".\n\nMake sure you check both files - the values in " + cfg.local_config_filename() + " will override the values in " + cfg.global_config_filename() + "." + "\n\n" + str(e))
+                raise idli.IdliException("Authentication failed.\n\nCheck your idli configuration. The most likely cause is incorrect values for 'user' or 'password' variables in the [Github] section of the configuration files:\n    " + cfg.local_config_filename() + "\n    " + cfg.global_config_filename() + ".\n\nMake sure you check both files - the values in " + cfg.local_config_filename() + " will override the values in " + cfg.global_config_filename() + "." + "\n\n" + str(e))
             if (e.code == 404):
                 self.validate()
             raise e
@@ -48,7 +49,7 @@ class GithubBackend(idli.Backend):
                    ("owner", "Owner of repository (github username).")
                    ]
     config_names = [ ("user", "Github username"),
-                     ("token", "Github api token. Visit https://github.com/account and select 'Account Admin' to view your token."),
+                     ("password", "Github password"),
                      ]
 
     def __init__(self, args, repo=None, auth = None):
@@ -58,9 +59,9 @@ class GithubBackend(idli.Backend):
         else:
             self.repo_owner, self.repo_name = repo
         if (auth is None):
-            self.__user, self.__token = None, None
+            self.__user, self.__password = None, None
         else:
-            self.__user, self.__token = auth
+            self.__user, self.__password = auth
 
     def repo(self):
         return self.__repo or self.get_config("repo")
@@ -71,8 +72,13 @@ class GithubBackend(idli.Backend):
     def username(self):
         return self.__user or self.get_config("user")
 
-    def token(self):
-        return self.__token or self.get_config("token")
+    def password(self):
+        return self.__password or self.get_config("password")
+
+    def auth(self):
+        if self.username() and self.password():
+            return (self.username(), self.password())
+        return None
 
     @catch_missing_config
     @catch_url_error
@@ -173,9 +179,8 @@ class GithubBackend(idli.Backend):
 
     #Utilities
     def __url_request(self, url, **kwargs):
-        data = urllib.urlencode(self.__post_vars(True, **kwargs))
-        request = urllib2.Request(url, data)
-        return urllib2.urlopen(request).read()
+        response = requests.get(url, auth=self.auth(), params=kwargs)
+        return response.content
 
     def __parse_comment(self, issue, cdict):
         return idli.IssueComment(issue, cdict["user"], "", cdict["body"], self.__parse_date(cdict["created_at"]))
@@ -186,12 +191,6 @@ class GithubBackend(idli.Backend):
                             issue_dict["number"], issue_dict["user"],
                             num_comments = issue_dict["comments"], status = issue_dict["state"],
                             create_time=create_time, tags=issue_dict["labels"])
-
-    def __post_vars(self, with_login=False, **kwargs):
-        if (with_login):
-            kwargs["login"] = self.username()
-            kwargs["token"] = self.token()
-        return kwargs
 
     def __state_to_gh_state(self, state):
         if (state):
