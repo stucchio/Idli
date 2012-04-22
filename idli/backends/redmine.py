@@ -61,6 +61,17 @@ class RedmineBackend(idli.Backend):
 
         return [self.__parse_issue(i) for i in json_results]
 
+    def get_issue(self, issue_id, get_comments=True):
+        result = json.loads(self.__url_request("/issues/"+str(issue_id)+".json", params={ 'include' : 'journals' }))
+        issue = self.__parse_issue(result['issue'])
+        journals = result['issue']['journals']
+        comment_result = [ self.__parse_comment(issue, j) for j in journals if j.has_key('notes') ]
+        return (issue, comment_result)
+
+    def __parse_comment(self, issue, journal):
+        return idli.IssueComment(issue=issue, creator=journal['user']['name'], body=journal['notes'], date=self.__parse_date(journal['created_on']), title="")
+
+
     def filtered_issue_list(self, state=True, mine=False, tag=None):
         issues = self.issue_list(state)
         if mine:

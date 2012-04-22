@@ -47,12 +47,12 @@ def print_issue(issue, comments):
         print "Comments:"
     for c in comments:
         print
-        if (c.title != ""):
-            print "    Comment: " + c.title.__class__
+        if (c.title != "") and (not (c.title is None)):
+            print "    Comment: " + str(c.title.__class__)
         print "    Author: " + c.creator
         print "    Date: " + str(c.date)
         print
-        print "    " + c.body
+        print "    " + c.body.replace("\n", "\n    ")
 
 if __name__ == "__main__":
     result, es = get_string_from_editor("test\n\ntest 2 \n")
