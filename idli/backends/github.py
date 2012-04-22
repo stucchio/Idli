@@ -12,22 +12,31 @@ import idli.config as cfg
 github_base_api_url = "http://github.com/api/v2/json/"
 dateformat = "%Y/%m/%d %H:%M:%S"
 
+class HttpRequestException(Exception):
+    def __init__(self, value, status_code):
+        super(HttpRequestException, self).__init__(value)
+        self.value = value
+        self.status_code = status_code
+
+    def __unicode__(self):
+        return "HttpError: " + unicode(self.status_code) + ", " + unicode(self.value)
+
 def catch_url_error(func):
     def wrapped_func(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except urllib2.URLError, e:
-            raise idli.IdliException("Could not connect to github. Error: " + str(e))
+        except HttpRequestException, e:
+            raise idli.IdliException("Could not connect to github. Error: " + unicode(e))
     return wrapped_func
 
 def catch_HTTPError(func):
     def wrapped_func(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
-        except urllib2.HTTPError, e:
-            if (e.code == 401):
+        except HttpRequestException, e:
+            if (e.status_code == 401):
                 raise idli.IdliException("Authentication failed.\n\nCheck your idli configuration. The most likely cause is incorrect values for 'user' or 'password' variables in the [Github] section of the configuration files:\n    " + cfg.local_config_filename() + "\n    " + cfg.global_config_filename() + ".\n\nMake sure you check both files - the values in " + cfg.local_config_filename() + " will override the values in " + cfg.global_config_filename() + "." + "\n\n" + str(e))
-            if (e.code == 404):
+            if (e.status_code == 404):
                 self.validate()
             raise e
     return wrapped_func
@@ -180,6 +189,8 @@ class GithubBackend(idli.Backend):
     #Utilities
     def __url_request(self, url, **kwargs):
         response = requests.get(url, auth=self.auth(), params=kwargs)
+        if (response.status_code - (response.status_code % 100)) != 200: #200 responses are all legitimate
+            raise HttpRequestException("HTTP error", response.status_code)
         return response.content
 
     def __parse_comment(self, issue, cdict):
