@@ -26,15 +26,16 @@ class RedmineBackend(idli.Backend):
     init_names = [ ("base_url", "Base URL to access"),
                    ("api_token", "Redmine API token"),
                    ("project_id", "Project ID"),
-                   ("Username", "Real name, as given in redmine. E.g., Chris Stucchio"),
+                   ("username", "Real name, as given in redmine. E.g., Chris Stucchio"),
                    ]
     config_names = [  ]
 
-    def __init__(self, args, base_url=None, token=None, project_id=None):
+    def __init__(self, args, base_url=None, token=None, project_id=None, username=None):
         self.args = args
         self.__base_url = base_url
         self.__token = token
         self.__project_id = project_id
+        self.__username = username
 
         self.__get_statuses()
 
@@ -46,6 +47,9 @@ class RedmineBackend(idli.Backend):
 
     def project_id(self):
         return self.__project_id or self.get_config("project_id")
+
+    def username(self):
+        return self.__username or self.get_config("username")
 
     def issue_list(self, state=True):
         params = { 'project_id' : self.project_id(), 'limit' : 100,  'status_id' : state}
