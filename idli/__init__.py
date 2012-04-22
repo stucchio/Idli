@@ -49,7 +49,7 @@ class IssueComment(object):
 
 class Backend(object):
     def __init__(self):
-        raise IdliException("That functionality is not implemented by this backend.")
+        raise IdliException("__init__ is not implemented by this backend.")
 
     def initialize(self):
         section_name = self.config_section or self.name
@@ -73,13 +73,13 @@ class Backend(object):
             print "Added local configuration to " + cfg.global_config_filename()
 
     def add_issue(self, title, body, tags=[]):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("add_issue is not implemented by this backend.")
 
     def tag_issue(self, issue_id, add_tags, remove_tags=[]):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("tag_issue is not implemented by this backend.")
 
     def issue_list(self, state=True):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("issue_list is not implemented by this backend.")
 
     def filtered_issue_list(self, state=True, mine=False, tag=None):
         issues = self.issue_list(state)
@@ -90,19 +90,19 @@ class Backend(object):
         return issues
 
     def get_issue(self, issue_id):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("get_issue is not implemented by this backend.")
 
     def resolve_issue(self, issue_id, status = "closed", message = None):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("resolve_issue resolve_issue is not implemented by this backend.")
 
     def add_comment(self, issue_id, body):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("add_comment is not implemented by this backend.")
 
     def assign_issue(self, issue_id, user, message):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("assign_issue is not implemented by this backend.")
 
     def username(self):
-        raise IdliNotImplementedException("That functionality is not implemented by this backend.")
+        raise IdliNotImplementedException("username is not implemented by this backend.")
 
     #Utilities
     def get_config(self, name):
