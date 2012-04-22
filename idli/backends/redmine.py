@@ -2,6 +2,7 @@
 
 import json
 import datetime
+import time
 import requests
 
 import idli
@@ -35,11 +36,7 @@ class RedmineBackend(idli.Backend):
         self.__token = token
         self.__project_id = project_id
 
-        try: #If we are properly configured, try to get statuses
-            self.token()
-            self.__get_statuses()
-        except idli.config.IdliMissingConfigException:
-            pass
+        self.__get_statuses()
 
     def base_url(self):
         return self.__base_url or self.get_config("base_url")
@@ -91,9 +88,27 @@ class RedmineBackend(idli.Backend):
             raise HttpRequestException("HTTP error", response.status_code)
         return response.content
 
+
+    STATUS_CHECK_INTERVAL = 60*60
     def __get_statuses(self):
+        try: #If we are properly configured, try to get statuses
+            self.token()
+        except cfg.IdliMissingConfigException:
+            pass
+
+        try:
+            if float(cfg.get_config_value(self.config_section, "last_status_list_time")) + self.STATUS_CHECK_INTERVAL > time.time():
+                idli.set_status_mapping(json.loads(cfg.get_config_value(self.config_section, "last_status_list")))
+                return
+        except cfg.IdliMissingConfigException:
+            pass
         try:
             result = json.loads(self.__url_request("/issue_statuses.json"))
-            idli.set_status_mapping(d)
+            cfg.set_config_value(self.config_section, "last_status_list", json.dumps(result), global_val=False)
+            cfg.set_config_value(self.config_section, "last_status_list_time", time.time())
+            idli.set_status_mapping(result)
         except HttpRequestException, e:
-            idli.set_status_mapping({ 'New' : True, 'Closed' : False, 'In Progress' : True, 'Rejected' : False, 'Resolved' : False, 'Feedback' : True })
+            mapping = { 'New' : True, 'Closed' : False, 'In Progress' : True, 'Rejected' : False, 'Resolved' : False, 'Feedback' : True }
+            cfg.set_config_value(self.config_section, "last_status_list", json.dumps(mapping), global_val=False)
+            cfg.set_config_value(self.config_section, "last_status_list_time", float(time.time()), global_val=False)
+            idli.set_status_mapping(mapping)
