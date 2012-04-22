@@ -12,13 +12,18 @@ github_base_api_url = "http://github.com/api/v2/json/"
 dateformat = "%Y/%m/%d %H:%M:%S"
 
 class HttpRequestException(Exception):
-    def __init__(self, value, status_code):
+    def __init__(self, value, status_code, body = None):
         super(HttpRequestException, self).__init__(value)
         self.value = value
         self.status_code = status_code
+        self.body = body
 
     def __unicode__(self):
-        return "HttpError: " + unicode(self.status_code) + ", " + unicode(self.value)
+        return "HttpError: " + unicode(self.status_code) + ", " + unicode(self.value) + ", " + unicode(self.body)
+
+    def __str__(self):
+        return "HttpError: " + str(self.status_code) + ", " + str(self.value) + ", " + self.body
+
 
 class RedmineBackend(idli.Backend):
     name = "redmine"
@@ -72,6 +77,16 @@ class RedmineBackend(idli.Backend):
         comment_result = [ self.__parse_comment(issue, j) for j in journals if j.has_key('notes') ]
         return (issue, comment_result)
 
+    def add_issue(self, title, body, tags=[]):
+        data = { "issue" : { 'project_id' : self.project_id(),
+                             'subject' : title,
+                             'priority_id' : 4,
+                             'description' : body,
+                             }
+                 }
+        response = json.loads(self.__url_post('/issues.json', data=data, method='post'))
+        return (self.__parse_issue(response['issue']), [])
+
     def __parse_comment(self, issue, journal):
         return idli.IssueComment(issue=issue, creator=journal['user']['name'], body=journal['notes'], date=self.__parse_date(journal['created_on']), title="")
 
@@ -95,12 +110,25 @@ class RedmineBackend(idli.Backend):
             issue.owner = i['assigned_to']['name']
         return issue
 
+    def __url_post(self, suffix, data={}, method='post'):
+        headers = { 'Content-Type' : 'application/json',
+                    }
+        auth = (self.token(), "null")
+        if method == 'post':
+            response = requests.post(self.base_url() + suffix, auth=auth, data=json.dumps(data), headers=headers)
+        if method == 'put':
+            response = requests.put(self.base_url() + suffix, auth=auth, data=json.dumps(data), headers=headers)
+        if (response.status_code - (response.status_code % 100)) != 200: #200 responses are all legitimate
+            raise HttpRequestException("HTTP error", response.status_code, response.content)
+        return response.content
+
+
     def __url_request(self, suffix, params={}):
         headers = { 'Content-Type' : 'application/json' }
         auth = (self.token(), "null")
         response = requests.get(self.base_url() + suffix, auth=auth, params=params, headers=headers)
         if (response.status_code - (response.status_code % 100)) != 200: #200 responses are all legitimate
-            raise HttpRequestException("HTTP error", response.status_code)
+            raise HttpRequestException("HTTP error", response.status_code, response.content)
         return response.content
 
 
@@ -127,3 +155,5 @@ class RedmineBackend(idli.Backend):
             cfg.set_config_value(self.config_section, "last_status_list", json.dumps(mapping), global_val=False)
             cfg.set_config_value(self.config_section, "last_status_list_time", float(time.time()), global_val=False)
             idli.set_status_mapping(mapping)
+        except cfg.IdliMissingConfigException:
+            pass
