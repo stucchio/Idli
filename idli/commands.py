@@ -89,7 +89,7 @@ class ListCommand(Command):
         self.print_issue_list(issues, self.args.limit)
 
     def __truncate_ljust_string(self, s, l, no_truncate=False):
-        s = str(s)
+        s = unicode(s)
         if len(s) <= l or no_truncate:
             return s.ljust(l)
         else:
@@ -238,7 +238,7 @@ class AssignIssueCommand(Command):
             raise idli.IdliException("Operation cancelled.")
         issue = self.backend.assign_issue(self.args.id, user=self.args.user, message = message)
         issue, comments = self.backend.get_issue(self.args.id)
-        print "Issue " + self.args.id + " assigned to " + str(self.args.user)
+        print "Issue " + self.args.id + " assigned to " + unicode(self.args.user)
         print
         util.print_issue(issue, comments)
 

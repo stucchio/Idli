@@ -1,5 +1,21 @@
 #!/usr/bin/python
 
+_status_mapping = {"open" : True,
+                   "closed" : False,
+                   "true" : True,
+                   "false" : False
+                   }
+
+def set_status_mapping(d):
+    global _status_mapping
+    _status_mapping = {}
+    for k in d.keys():
+        _status_mapping[k.lower()] = d[k]
+
+def get_status_mapping():
+    global _status_mapping
+    return _status_mapping
+
 class Issue(object):
     def __init__(self, title, body, id, creator, status = True, num_comments = None, create_time=None, last_modified=None, owner=None, tags=[]):
         self.title = title
@@ -17,13 +33,8 @@ class Issue(object):
         if (status.__class__ == bool):
             return status
         if (status.__class__ == str or status.__class__ == unicode):
-            return self.__status_mapping[status.lower()]
+            return get_status_mapping()[status.lower()]
 
-    __status_mapping = {"open" : True,
-                        "closed" : False,
-                        "true" : True,
-                        "false" : False
-                        }
     def __str__(self):
         return "Issue(" + self.id + ", " + self.title + ", " + self.creator + ", " + str(self.status) + ")"
 
