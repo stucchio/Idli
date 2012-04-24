@@ -99,6 +99,11 @@ class RedmineBackend(idli.Backend):
         result = self.__url_post('/issues/' + str(issue_id) + '.json', data=data, method='put')
         return self.get_issue(issue_id)
 
+    def add_comment(self, issue_id, body):
+        data = { 'issue' : { 'notes' : body, } }
+        result = self.__url_post('/issues/' + str(issue_id) + '.json', data=data, method='put')
+        return self.get_issue(issue_id)
+
     def __parse_comment(self, issue, journal):
         return idli.IssueComment(issue=issue, creator=journal['user']['name'], body=journal['notes'], date=self.__parse_date(journal['created_on']), title="")
 
