@@ -87,6 +87,18 @@ class RedmineBackend(idli.Backend):
         response = json.loads(self.__url_post('/issues.json', data=data, method='post'))
         return (self.__parse_issue(response['issue']), [])
 
+    def resolve_issue(self, issue_id, status="Closed", message=None):
+        if idli.get_status_mapping()[status.lower()]:
+            status_id = 1
+        else:
+            status_id = 5
+        data = { 'issue' : { 'status_id' : status_id,
+                             'notes' : message,
+                             }
+                 }
+        result = self.__url_post('/issues/' + str(issue_id) + '.json', data=data, method='put')
+        return self.get_issue(issue_id)
+
     def __parse_comment(self, issue, journal):
         return idli.IssueComment(issue=issue, creator=journal['user']['name'], body=journal['notes'], date=self.__parse_date(journal['created_on']), title="")
 
