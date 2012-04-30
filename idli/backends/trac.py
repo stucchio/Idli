@@ -16,16 +16,16 @@ def catch_socket_errors(func):
         try:
             return func(*args, **kwargs)
         except socket.gaierror, e:
-            raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+            raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + unicode(e))
         except socket.error, e:
-            raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+            raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + unicode(e))
         except xmlrpclib.Fault, e:
             if e.faultCode == 403:
                 raise idli.IdliException("Trac's permissions are not set correctly. Run\n $ trac-admin TRACDIR permission add authenticated XML_RPC\nto enable XML_RPC permissions (which are required by idli).")
             else:
-                raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + str(e))
+                raise idli.IdliException("Error connecting to trac server " + trac_server_url() + ".\nCheck your config file and make sure the path is correct: " + cfg.local_config_filename() + ".\n\n" + unicode(e))
         except xmlrpclib.ProtocolError, e:
-            raise idli.IdliException("Protocol error. This probably means that the XmlRpc plugin for trac is not enabled. Follow the instructions here to install it:\nhttp://trac-hacks.org/wiki/XmlRpcPlugin\n\n"+str(e))
+            raise idli.IdliException("Protocol error. This probably means that the XmlRpc plugin for trac is not enabled. Follow the inunicodeuctions here to install it:\nhttp://trac-hacks.org/wiki/XmlRpcPlugin\n\n"+unicode(e))
     return __wrapped
 
 class TracBackend(idli.Backend):
@@ -110,7 +110,7 @@ class TracBackend(idli.Backend):
         return self.get_config("password")
 
     def __convert_comment(self, c, issue):
-        return idli.IssueComment(issue, str(c[1]), "", str(c[4]), date=c[0])
+        return idli.IssueComment(issue, unicode(c[1]), "", unicode(c[4]), date=c[0])
 
     def __convert_issue(self, t):
         issue_id = t[0]
@@ -121,7 +121,7 @@ class TracBackend(idli.Backend):
         status = True
         if i['status'] == "closed":
             status = False
-        return idli.Issue(i["summary"], i["description"], str(issue_id), i['reporter'],
+        return idli.Issue(i["summary"], i["description"], unicode(issue_id), i['reporter'],
                           status, num_comments = 0, create_time=self.__convert_date(t[1]),
                           last_modified = self.__convert_date(t[2]), owner=owner)
 
