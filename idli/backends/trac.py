@@ -133,9 +133,18 @@ class TracBackend(idli.Backend):
             return False
         return True
 
+def __http_protocol():
+    try:
+        use_https = cfg.get_config_value(CONFIG_SECTION, "use_https")
+        if (use_https.lower() == "true"):
+            return "https://"
+        else:
+            return "http://"
+    except IdliMissingConfigException, e:
+        return "http://"
+
 def trac_server_url():
-    return "http://" + cfg.get_config_value(CONFIG_SECTION, "server")+"/"+cfg.get_config_value(CONFIG_SECTION, "path")
+    return __http_protocol() + cfg.get_config_value(CONFIG_SECTION, "server")+"/"+cfg.get_config_value(CONFIG_SECTION, "path")
 
 def trac_xml_url():
-    return "http://"+cfg.get_config_value(CONFIG_SECTION, "user")+":"+cfg.get_config_value(CONFIG_SECTION, "password")+"@"+cfg.get_config_value(CONFIG_SECTION, "server")+"/"+cfg.get_config_value(CONFIG_SECTION, "path")+trac_suffix_url
-
+    return __http_protocol()+cfg.get_config_value(CONFIG_SECTION, "user")+":"+cfg.get_config_value(CONFIG_SECTION, "password")+"@"+cfg.get_config_value(CONFIG_SECTION, "server")+"/"+cfg.get_config_value(CONFIG_SECTION, "path")+trac_suffix_url
