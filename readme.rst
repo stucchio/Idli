@@ -16,7 +16,7 @@ I (the author) prefer the command line::
 
     $ idli add --title "The frobnicator is broken." --body "The frobnicator does not frobnicate."
 
-Currently idli allows you to talk to github and track backends.
+Currently idli allows you to talk to github and trac backends.
 
 WARNING: THIS DOCUMENTATION IS INCOMPLETE
 
